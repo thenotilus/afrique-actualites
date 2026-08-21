@@ -1,0 +1,6 @@
+# Catalogue de traduction français (locale par défaut).
+# Voir §3bis de la documentation fonctionnelle : l'interface publique doit être
+# disponible en français ET en anglais dès la refonte.
+app:
+    site_name: "Afrique Actualités"
+    tagline: "Toute l'actualité de l'Afrique, en temps réel et par pays."

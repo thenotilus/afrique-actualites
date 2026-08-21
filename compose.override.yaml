@@ -1,0 +1,12 @@
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    ports:
+      - "3306"
+###< doctrine/doctrine-bundle ###
+###> afkr/lock-cache ###
+  redis:
+    ports:
+      - "6379"
+###< afkr/lock-cache ###

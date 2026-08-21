@@ -1,0 +1,6 @@
+# English translation catalogue.
+# See §3bis of the functional documentation: the public interface must be
+# available in both French and English from the rewrite onward.
+app:
+    site_name: "Afrique Actualités"
+    tagline: "All African news, in real time and by country."

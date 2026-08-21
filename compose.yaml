@@ -1,0 +1,33 @@
+
+services:
+###> doctrine/doctrine-bundle ###
+  database:
+    image: mysql:${MYSQL_VERSION:-8.0}
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-afrique_actualites}
+      # You should definitely change the passwords in production
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-!ChangeMe!}
+      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-!ChangeMeRoot!}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - database_data:/var/lib/mysql:rw
+      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
+      # - ./docker/db/data:/var/lib/mysql:rw
+###< doctrine/doctrine-bundle ###
+
+###> afkr/lock-cache ###
+  # Store cible pour symfony/lock (workers continus) et le cache PSR-6 — voir §9.1 et
+  # docs/architecture.md. Optionnel en développement (le store `flock` par défaut suffit).
+  redis:
+    image: redis:7-alpine
+###< afkr/lock-cache ###
+
+volumes:
+###> doctrine/doctrine-bundle ###
+  database_data:
+###< doctrine/doctrine-bundle ###

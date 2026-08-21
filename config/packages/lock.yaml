@@ -1,0 +1,6 @@
+# Store par défaut (flock) pour le développement local. À remplacer par un store partagé
+# (ex. Redis, voir docker-compose.yml) avant la mise en production : les futurs workers
+# d'extraction/classification continus doivent se coordonner via ce verrou pour éviter tout
+# chevauchement d'exécution (§8 point 12 de la documentation fonctionnelle).
+framework:
+    lock: '%env(LOCK_DSN)%'

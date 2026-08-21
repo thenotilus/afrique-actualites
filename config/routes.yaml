@@ -1,0 +1,13 @@
+# Routage localisé (§3bis de la documentation fonctionnelle) : toutes les routes de contrôleur
+# public sont préfixées par la locale (/fr/..., /en/...). Le back-office EasyAdmin (déclaré via
+# son propre bundle de routes) n'est volontairement pas concerné par ce préfixe.
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+    prefix: /{_locale}
+    requirements:
+        _locale: fr|en
+    defaults:
+        _locale: fr
