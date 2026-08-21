@@ -42,10 +42,14 @@ class Taxonomy
     private TaxonomyStatus $status;
 
     /**
-     * Pondération éditoriale manuelle, exploitée par le scoring du pipeline de classification
-     * (§10.1.7). Contrairement à l'ancienne application, où ce champ existait mais n'était jamais
-     * lu (dette listée en §4.3, L11), il doit être pris en compte par ClassificationService dès
-     * son introduction en phase 4.
+     * Score de pertinence calculé par `ClassificationService` (§10.1.7) : poids cumulé du terme
+     * dans le dernier lot d'articles traité (présence en titre pondérée plus fort qu'en
+     * description). Recalculé à chaque passage de classification, pas un champ éditorial figé.
+     *
+     * Contrairement à l'ancienne application, où ce champ existait (note attribuée manuellement
+     * par un administrateur) mais n'était jamais lu par la logique de classement (dette listée en
+     * §4.3, L11), il sert désormais de repère de tri sur l'écran de validation des suggestions
+     * (§3.12) pour aider à prioriser les suggestions les plus significatives.
      */
     #[ORM\Column(nullable: true)]
     private ?int $mark = null;

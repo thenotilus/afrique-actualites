@@ -28,3 +28,26 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Pipeline de classification (§10.1) : une seule implémentation de chaque étape aujourd'hui,
+    # mais le tout passe par des interfaces pour rester remplaçable (ex. stemmer linguistique
+    # dédié en remplacement de LightSuffixStemmer, cf. son docblock) sans toucher au reste.
+    App\Classification\Pipeline\NormalizerInterface: '@App\Classification\Pipeline\UnicodeNormalizer'
+    App\Classification\Pipeline\TokenizerInterface: '@App\Classification\Pipeline\RegexTokenizer'
+    App\Classification\Pipeline\StopWordFilterInterface: '@App\Classification\Pipeline\StopWordFilter'
+    App\Classification\Pipeline\StemmerInterface: '@App\Classification\Pipeline\LightSuffixStemmer'
+    App\Classification\Pipeline\NamedEntityRecognizerInterface: '@App\Classification\Pipeline\CountryNamedEntityRecognizer'
+    App\Classification\Pipeline\ScorerInterface: '@App\Classification\Pipeline\BatchFrequencyScorer'
+
+    App\Classification\Pipeline\RegexTokenizer:
+        arguments:
+            $minWordLength: '%classification.min_word_length%'
+
+    App\Classification\Pipeline\StopWordFilter:
+        arguments:
+            $resourcesDirectory: '%kernel.project_dir%/src/Classification/Resources/stopwords'
+
+    App\Classification\ClassificationService:
+        arguments:
+            $minDocumentFrequency: '%classification.min_document_frequency%'
+            $maxDocumentFrequencyRatio: '%classification.max_document_frequency_ratio%'

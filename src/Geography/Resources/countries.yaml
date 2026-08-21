@@ -1,0 +1,58 @@
+# Référentiel des pays d'Afrique (§3.13, §10.1.6) : les 54 États membres de l'Union africaine
+# largement reconnus par l'ONU. Alimente la reconnaissance d'entités nommées du pipeline de
+# classification (rattachement natif Article ↔ Country) ainsi que la future page "actualité par
+# pays". Chargé par `app:country:fill` (src/Geography/Command/FillCountriesCommand.php).
+- { code: DZ, name_fr: Algérie, name_en: Algeria }
+- { code: AO, name_fr: Angola, name_en: Angola }
+- { code: BJ, name_fr: Bénin, name_en: Benin }
+- { code: BW, name_fr: Botswana, name_en: Botswana }
+- { code: BF, name_fr: Burkina Faso, name_en: Burkina Faso }
+- { code: BI, name_fr: Burundi, name_en: Burundi }
+- { code: CV, name_fr: Cap-Vert, name_en: Cabo Verde }
+- { code: CM, name_fr: Cameroun, name_en: Cameroon }
+- { code: CF, name_fr: République centrafricaine, name_en: Central African Republic }
+- { code: TD, name_fr: Tchad, name_en: Chad }
+- { code: KM, name_fr: Comores, name_en: Comoros }
+- { code: CG, name_fr: Congo, name_en: Congo }
+- { code: CD, name_fr: République démocratique du Congo, name_en: Democratic Republic of the Congo }
+- { code: CI, name_fr: "Côte d'Ivoire", name_en: Ivory Coast }
+- { code: DJ, name_fr: Djibouti, name_en: Djibouti }
+- { code: EG, name_fr: Égypte, name_en: Egypt }
+- { code: GQ, name_fr: Guinée équatoriale, name_en: Equatorial Guinea }
+- { code: ER, name_fr: Érythrée, name_en: Eritrea }
+- { code: SZ, name_fr: Eswatini, name_en: Eswatini }
+- { code: ET, name_fr: Éthiopie, name_en: Ethiopia }
+- { code: GA, name_fr: Gabon, name_en: Gabon }
+- { code: GM, name_fr: Gambie, name_en: Gambia }
+- { code: GH, name_fr: Ghana, name_en: Ghana }
+- { code: GN, name_fr: Guinée, name_en: Guinea }
+- { code: GW, name_fr: Guinée-Bissau, name_en: Guinea-Bissau }
+- { code: KE, name_fr: Kenya, name_en: Kenya }
+- { code: LS, name_fr: Lesotho, name_en: Lesotho }
+- { code: LR, name_fr: Liberia, name_en: Liberia }
+- { code: LY, name_fr: Libye, name_en: Libya }
+- { code: MG, name_fr: Madagascar, name_en: Madagascar }
+- { code: MW, name_fr: Malawi, name_en: Malawi }
+- { code: ML, name_fr: Mali, name_en: Mali }
+- { code: MR, name_fr: Mauritanie, name_en: Mauritania }
+- { code: MU, name_fr: Maurice, name_en: Mauritius }
+- { code: MA, name_fr: Maroc, name_en: Morocco }
+- { code: MZ, name_fr: Mozambique, name_en: Mozambique }
+- { code: NA, name_fr: Namibie, name_en: Namibia }
+- { code: NE, name_fr: Niger, name_en: Niger }
+- { code: NG, name_fr: Nigeria, name_en: Nigeria }
+- { code: RW, name_fr: Rwanda, name_en: Rwanda }
+- { code: ST, name_fr: "Sao Tomé-et-Principe", name_en: Sao Tome and Principe }
+- { code: SN, name_fr: Sénégal, name_en: Senegal }
+- { code: SC, name_fr: Seychelles, name_en: Seychelles }
+- { code: SL, name_fr: Sierra Leone, name_en: Sierra Leone }
+- { code: SO, name_fr: Somalie, name_en: Somalia }
+- { code: ZA, name_fr: Afrique du Sud, name_en: South Africa }
+- { code: SS, name_fr: Soudan du Sud, name_en: South Sudan }
+- { code: SD, name_fr: Soudan, name_en: Sudan }
+- { code: TZ, name_fr: Tanzanie, name_en: Tanzania }
+- { code: TG, name_fr: Togo, name_en: Togo }
+- { code: TN, name_fr: Tunisie, name_en: Tunisia }
+- { code: UG, name_fr: Ouganda, name_en: Uganda }
+- { code: ZM, name_fr: Zambie, name_en: Zambia }
+- { code: ZW, name_fr: Zimbabwe, name_en: Zimbabwe }

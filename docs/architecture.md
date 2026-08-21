@@ -112,6 +112,56 @@ sur chacun des 9 écrans CRUD et sur le circuit de validation complet (soumissio
 vérification du changement de statut en base). C'est ce test, pas une relecture de code, qui a
 permis de détecter et corriger les pièges listés ci-dessus.
 
+## Moteur de classification (phase 4)
+
+`src/Classification/ClassificationService.php` orchestre le pipeline de détection de mots-clés
+bilingue (§10 de la documentation fonctionnelle), successeur du `KeywordService` de l'ancienne
+application (§4.2/§4.3). Le pipeline est découpé en étapes interchangeables sous
+`Classification/Pipeline/`, chacune derrière une interface : `NormalizerInterface` (Unicode NFKD +
+suppression des diacritiques, remplace l'ancienne table Latin-1 codée en dur),
+`TokenizerInterface` (découpage par classes de caractères Unicode, remplace `str_word_count()`),
+`StopWordFilterInterface` (listes de mots vides par langue, `Resources/stopwords/{fr,en}.yaml`,
+absentes de l'ancienne application), `StemmerInterface` (racinisation heuristique légère par
+suffixes, **pas** un stemmer linguistique complet type Snowball/Porter — limite assumée,
+documentée dans `LightSuffixStemmer`), et `ScorerInterface` (fréquence documentaire + poids cumulé
+sur le lot, remplace le simple comptage brut d'occurrences).
+
+Le service ne produit **jamais** de mot-clé directement utilisable : chaque nouveau terme détecté
+est créé comme `Taxonomy` au statut `SUGGESTED` et rattaché au "sac de mots" de l'article
+(`addTaxonomy()`), jamais à ses mots-clés retenus. Deux seuils de configuration
+(`config/packages/classification.yaml`) filtrent le bruit avant même la création d'une
+suggestion : `classification.min_document_frequency` (un terme isolé à un seul article du lot
+n'est pas retenu) et `classification.max_document_frequency_ratio` (un terme présent dans la
+quasi-totalité du lot est probablement un mot commun ayant échappé au filtrage de mots vides,
+§4.3 L6). En revanche, un terme **déjà validé** par un administrateur lors d'un passage précédent
+est automatiquement promu mot-clé (`addKeyword()`) sur tout nouvel article qui le contient, dès
+lors qu'il franchit ces mêmes seuils sur le lot en cours : c'est le pipeline qui continue
+d'exploiter une décision de validation déjà prise, pas un nouveau contournement du circuit de
+validation (§4.4). La réconciliation dans l'autre sens (un mot-clé validé après coup profite
+rétroactivement aux articles déjà traités) est assurée côté back-office par
+`TaxonomyCrudController::reconcileValidatedTaxonomy()`, appelée depuis les actions
+"Valider"/"Valider la sélection".
+
+Chaque langue a son propre espace de taxonomies (`UniqueEntity(['label', 'language'])` sur
+`Taxonomy`) : "élection" (FR) et "election" (EN) sont deux entités distinctes, chacune avec son
+propre pipeline de stopwords/racinisation (§3bis, §10.1.9).
+
+La reconnaissance des pays cités (`NamedEntityRecognizerInterface`/`CountryNamedEntityRecognizer`)
+est un cas à part : elle alimente directement le rattachement natif `Article ↔ Country` (§3.13),
+sans passer par le circuit de suggestion/validation, puisqu'il s'agit d'un référentiel fermé (pays
+actifs en base) et non de texte libre. Le référentiel des 54 États membres de l'Union africaine
+est fourni par `src/Geography/Resources/countries.yaml` et chargé (upsert idempotent par code ISO,
+rejouable sans dupliquer) par `php bin/console app:country:fill`. **Limite connue et assumée** :
+seul le nom officiel du pays est reconnu ("Sénégal"), pas ses gentilés ("sénégalais"), pourtant
+fréquents dans les titres de presse — un enrichissement naturel mais qui nécessite des données
+supplémentaires non disponibles à ce stade (voir le docblock de `CountryNamedEntityRecognizer`).
+
+Testé par `tests/Classification/Pipeline/*Test.php` (un test par étape du pipeline, en isolation)
+et `tests/Classification/ClassificationServiceTest.php` (intégration bout en bout sur un lot
+d'articles français et anglais aux titres réalistes, vérifiant la création de suggestions, la
+séparation des espaces de taxonomies par langue, la promotion automatique d'un mot-clé déjà validé
+et le rattachement des pays).
+
 ## Modèle de données (phase 2)
 
 Les entités vivent sous `src/<Domaine>/Entity/` (voir liste ci-dessus). Points de conception à
@@ -167,10 +217,19 @@ php bin/console doctrine:migrations:migrate
   `tests/Controller/Admin/AdminBackofficeTest.php`. Reste en dette : formulaire de connexion
   public (actuellement 401 pour un visiteur anonyme, faute de point d'entrée d'authentification —
   prévu en phase 6 avec les autres pages publiques).
+- **Phase 4 (moteur de classification bilingue)** : pipeline complet (normalisation, tokenisation,
+  filtrage de mots vides, racinisation, scoring, reconnaissance des pays), `ClassificationService`,
+  référentiel des 54 pays d'Afrique + commande `app:country:fill` — terminée. Testée par
+  `tests/Classification/Pipeline/*Test.php` et `tests/Classification/ClassificationServiceTest.php`
+  (intégration bout en bout, titres réels FR/EN). **Point d'attention pour la phase 5** :
+  `ClassificationService` n'a encore aucun appelant (aucune commande/worker ne l'injecte), donc le
+  compilateur de conteneur Symfony l'élague comme service inutilisé en environnement de test — les
+  tests d'intégration le construisent directement avec ses dépendances réelles plutôt que de le
+  récupérer depuis le conteneur. Ce point se résout naturellement dès que la phase 5 (worker
+  d'extraction) l'injecte comme dépendance réelle.
 
-Le pipeline de classification (phase 4), le crawling multi-bots (phase 5) et les pages publiques
-(phase 6) sont les étapes suivantes (voir le tableau de phasage en §11.2 de la documentation
-fonctionnelle).
+Le crawling multi-bots (phase 5) et les pages publiques (phase 6) sont les étapes suivantes (voir
+le tableau de phasage en §11.2 de la documentation fonctionnelle).
 
 ## Suivi des dépendances de développement
 

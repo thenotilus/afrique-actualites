@@ -55,8 +55,9 @@ class TaxonomyCrudController extends AbstractCrudController
                 'Les suggestions détectées automatiquement doivent être validées avant de devenir '
                 .'des mots-clés utilisables pour classer et taguer les articles.',
             )
-            // Les suggestions en attente remontent en premier : c'est la file de travail.
-            ->setDefaultSort(['status' => 'ASC', 'createdAt' => 'ASC']);
+            // Les suggestions en attente remontent en premier ; à statut égal, les scores de
+            // pertinence les plus élevés d'abord (§10.1.7).
+            ->setDefaultSort(['status' => 'ASC', 'mark' => 'DESC', 'createdAt' => 'ASC']);
     }
 
     public function configureFields(string $pageName): iterable
@@ -81,9 +82,8 @@ class TaxonomyCrudController extends AbstractCrudController
                 default => 'secondary',
             })
             ->setFormTypeOption('disabled', true);
-        yield IntegerField::new('mark', 'Pondération')
-            ->setHelp('Exploitée par le scoring du moteur de classification (phase 4).')
-            ->hideOnIndex();
+        yield IntegerField::new('mark', 'Score')
+            ->setHelp('Calculé par le pipeline de classification : repère de tri, pas une note éditoriale.');
         yield TextField::new('validatedBy.email', 'Traité par')
             ->onlyOnIndex();
         yield DateTimeField::new('validatedAt', 'Traité le')
@@ -141,9 +141,14 @@ class TaxonomyCrudController extends AbstractCrudController
     {
         $taxonomy = $this->findTaxonomyOrFail($entityId);
         $taxonomy->validate($this->getAdminUser());
+        $promoted = $this->reconcileValidatedTaxonomy($taxonomy);
         $this->entityManager->flush();
 
-        $this->addFlash('success', sprintf('Le mot-clé « %s » a été validé.', $taxonomy->getLabel()));
+        $this->addFlash('success', sprintf(
+            'Le mot-clé « %s » a été validé (rattaché à %d article(s) déjà détecté(s)).',
+            $taxonomy->getLabel(),
+            $promoted,
+        ));
 
         return $this->redirect($this->container->get(AdminUrlGenerator::class)->setAction(Action::INDEX)->generateUrl());
     }
@@ -170,6 +175,25 @@ class TaxonomyCrudController extends AbstractCrudController
         return $taxonomy;
     }
 
+    /**
+     * Rattache rétroactivement un mot-clé fraîchement validé aux articles qui le contenaient
+     * déjà dans leur "sac de mots" (§10.4) : sans cette réconciliation, seuls les articles
+     * traités par le pipeline de classification *après* la validation en bénéficieraient, et le
+     * travail de détection déjà effectué sur les articles précédents serait perdu.
+     */
+    private function reconcileValidatedTaxonomy(Taxonomy $taxonomy): int
+    {
+        $promoted = 0;
+        foreach ($taxonomy->getArticles() as $article) {
+            if (!$article->getKeywords()->contains($taxonomy)) {
+                $article->addKeyword($taxonomy);
+                ++$promoted;
+            }
+        }
+
+        return $promoted;
+    }
+
     #[AdminRoute('/batch-validate', 'batch_validate', options: ['methods' => ['POST']])]
     public function batchValidate(BatchActionDto $batchActionDto): Response
     {
@@ -177,16 +201,22 @@ class TaxonomyCrudController extends AbstractCrudController
         $repository = $this->entityManager->getRepository(Taxonomy::class);
 
         $count = 0;
+        $promoted = 0;
         foreach ($batchActionDto->getEntityIds() as $entityId) {
             $taxonomy = $repository->find($entityId);
             if (null !== $taxonomy && TaxonomyStatus::SUGGESTED === $taxonomy->getStatus()) {
                 $taxonomy->validate($admin);
+                $promoted += $this->reconcileValidatedTaxonomy($taxonomy);
                 ++$count;
             }
         }
         $this->entityManager->flush();
 
-        $this->addFlash('success', sprintf('%d mot(s)-clé(s) validé(s).', $count));
+        $this->addFlash('success', sprintf(
+            '%d mot(s)-clé(s) validé(s) (rattachés à %d article(s) déjà détecté(s)).',
+            $count,
+            $promoted,
+        ));
 
         return $this->redirect($this->container->get(AdminUrlGenerator::class)->setAction(Action::INDEX)->generateUrl());
     }

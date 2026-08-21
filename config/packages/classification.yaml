@@ -1,0 +1,9 @@
+parameters:
+    # Longueur minimale (en caractères) d'un token pour être candidat mot-clé (§10.1.3).
+    classification.min_word_length: 4
+    # Nombre minimal d'articles distincts du lot devant contenir un token pour qu'il devienne une
+    # suggestion de taxonomie (§10.1.7) : élimine le bruit isolé à un seul article.
+    classification.min_document_frequency: 2
+    # Au-delà de cette proportion du lot, un token est probablement un mot commun ayant échappé
+    # au filtrage de mots vides plutôt qu'un sujet d'actualité, et n'est pas retenu (§4.3 L6).
+    classification.max_document_frequency_ratio: 0.6

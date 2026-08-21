@@ -57,8 +57,24 @@ le plan détaillé dans la documentation fonctionnelle.
       (`tests/Controller/Admin/AdminBackofficeTest.php`)
 - [ ] Formulaire de connexion public (prévu en phase 6 avec le reste des pages publiques)
 
-Les phases suivantes (moteur de classification, crawling, pages publiques...) sont détaillées
-dans le tableau de phasage (§11.2 de la documentation fonctionnelle).
+**Phase 4 — Moteur de classification bilingue** :
+
+- [x] Pipeline en étapes interchangeables (`src/Classification/Pipeline/`) : normalisation
+      Unicode, tokenisation, filtrage de mots vides FR/EN, racinisation heuristique, scoring par
+      fréquence documentaire pondérée
+- [x] `ClassificationService` : suggestions créées au statut `SUGGESTED`, jamais directement
+      utilisables comme mots-clés ; promotion automatique d'un mot-clé déjà validé sur les
+      nouveaux articles qui le contiennent
+- [x] Reconnaissance des pays cités (`CountryNamedEntityRecognizer`), rattachement natif
+      `Article ↔ Country`
+- [x] Référentiel des 54 pays d'Afrique (`src/Geography/Resources/countries.yaml`) et commande
+      d'import idempotente `app:country:fill`
+- [x] Seuils configurables (`config/packages/classification.yaml`)
+- [x] Tests unitaires par étape du pipeline + test d'intégration bout en bout sur un lot
+      d'articles réalistes FR/EN (`tests/Classification/`)
+
+Les phases suivantes (crawling multi-bots, pages publiques...) sont détaillées dans le tableau de
+phasage (§11.2 de la documentation fonctionnelle).
 
 ## Démarrage local
 
