@@ -17,8 +17,14 @@ services:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
-            - '../src/Entity/'
             - '../src/Kernel.php'
+            # Entités, énumérations et objets-valeur : simples classes de données par domaine
+            # (src/<Domaine>/Entity, src/<Domaine>/Enum, src/Shared/ValueObject), jamais des
+            # services. Le pattern par défaut du squelette Symfony (../src/Entity/) ne couvrait
+            # que l'ancienne structure plate ; ici il faut exclure sous chaque domaine.
+            - '../src/*/Entity/'
+            - '../src/*/Enum/'
+            - '../src/Shared/ValueObject/'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

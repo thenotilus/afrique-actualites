@@ -37,6 +37,14 @@ Le mapping Doctrine (`config/packages/doctrine.yaml`) scanne l'intégralité de 
 n'est enregistrée comme entité que si elle porte l'attribut `#[ORM\Entity]`, indépendamment de son
 dossier.
 
+**Piège à connaître** : `config/services.yaml` doit exclure `../src/*/Entity/` et `../src/*/Enum/`
+de l'autowiring (en plus de `../src/DependencyInjection/` et `../src/Kernel.php`) — le squelette
+Symfony par défaut n'exclut que `../src/Entity/`, un chemin qui n'existe pas dans cette structure
+par domaine. Sans cette exclusion, chaque entité est enregistrée comme service autowiré, et
+Symfony tente de l'instancier avec un constructeur vide dès qu'elle apparaît comme argument de
+service ou de contrôleur, ce qui échoue puisque nos entités ont des constructeurs avec paramètres
+obligatoires (voir la section Back-office ci-dessous pour l'erreur concrète que ça provoque).
+
 ## Internationalisation
 
 - Locales supportées : `fr` (défaut) et `en` (voir §3bis de la documentation fonctionnelle).
@@ -64,8 +72,45 @@ tournent en parallèle.
 
 ## Back-office
 
-Back-office **unique** sous EasyAdminBundle (§3.12), à construire en phase 3 du plan de refonte.
-Aucun autre système d'administration (Sonata, contrôleur "maison") n'est repris.
+Back-office **unique** sous EasyAdminBundle v5 (§3.12) : `src/Controller/Admin/`. Aucun autre
+système d'administration (Sonata, contrôleur "maison") n'est repris.
+
+L'écran `TaxonomyCrudController` porte le circuit de validation des mots-clés (§4.4/§10.4) :
+actions "Valider"/"Rejeter" par ligne et en masse, filtres par statut/langue. Il n'expose ni
+création ni édition libre (`Action::NEW`/`Action::EDIT` retirées) : le statut d'une taxonomie ne
+change que via ces actions dédiées, jamais par saisie directe.
+
+Les champs association vers `Taxonomy` (mots-clés d'une "Une", d'une newsletter) restreignent
+systématiquement leurs choix aux taxonomies `VALIDATED` via `AssociationField::setQueryBuilder()`.
+C'est nécessaire car EasyAdmin édite les collections Doctrine directement (option Symfony Form
+`by_reference: true`), sans passer par les méthodes `addKeyword()`/`addTaxonomy()` des entités —
+la garde de code posée en phase 2 ne protège donc que l'API programmatique, pas un formulaire
+d'association générique ; la restriction des choix côté champ est le complément nécessaire.
+`Article::keywords` (mots-clés retenus) est volontairement **en lecture seule** dans le back-office
+pour la même raison : ce sont des données dérivées du futur pipeline de classification (phase 4),
+pas un champ à éditer à la main.
+
+Notes d'implémentation EasyAdmin 5.x qui ont posé des pièges à la construction (documentées ici
+pour ne pas les retomber) :
+- Le contrôleur de dashboard doit porter `#[AdminDashboard(routePath: '/admin', routeName: 'admin')]`
+  au niveau de la classe ; l'ancien `#[Route('/admin')]` sur `index()` ne suffit plus (v5).
+- Les actions CRUD personnalisées (`linkToCrudAction()`) requièrent `#[AdminRoute]` sur la méthode
+  cible, avec le placeholder `{entityId}` explicitement présent dans le chemin.
+- Le placeholder `{entityId:alias.property}` documenté par EasyAdmin est **cosmétique** (lisibilité
+  de l'URL) : il ne déclenche pas d'hydratation automatique de l'entité en argument de contrôleur.
+  Le plus simple et le plus fiable est de typer l'argument en `int $entityId` et de charger
+  l'entité soi-même dans le corps de la méthode (voir `TaxonomyCrudController::validate()`).
+- Le firewall `main` doit déclarer `logout: { path: app_logout }` (avec une route correspondante,
+  même si son contrôleur n'est jamais exécuté) : sans elle, le layout EasyAdmin lève une exception
+  au rendu du menu utilisateur.
+- Toute entité (`Feed`, `Taxonomy`, etc.) doit être exclue de l'autowiring des services
+  (`config/services.yaml`) : le squelette Symfony n'exclut que `../src/Entity/` par défaut, ce qui
+  ne couvre pas une structure par domaine (`src/<Domaine>/Entity/`) — voir la section suivante.
+
+Un test de fumée (`tests/Controller/Admin/AdminBackofficeTest.php`) fait une requête HTTP réelle
+sur chacun des 9 écrans CRUD et sur le circuit de validation complet (soumission du formulaire,
+vérification du changement de statut en base). C'est ce test, pas une relecture de code, qui a
+permis de détecter et corriger les pièges listés ci-dessus.
 
 ## Modèle de données (phase 2)
 
@@ -94,15 +139,15 @@ connaître :
   est le composant Cache standard de Symfony (PSR-6), configuré dans
   `config/packages/cache.yaml`, avec un adaptateur Redis en production (§9.1, §8 point 8).
 
-### Migration Doctrine — action requise avant la phase 3
+### Migration Doctrine — action requise avant la mise en production
 
 Le mapping des 9 entités a été validé (`doctrine:mapping:info`, `doctrine:schema:validate`) et
-testé fonctionnellement (`tests/Entity/EntityGraphTest.php`) via une base **SQLite locale**, le
-démon Docker n'étant pas démarrable dans l'environnement d'amorçage (permissions du bac à sable).
-**Aucune migration Doctrine n'a donc encore été générée** : une migration produite depuis SQLite
-serait dans le mauvais dialecte SQL pour la cible MySQL. Dès qu'une base MySQL est joignable
-(`docker compose up -d database` sur une machine où Docker fonctionne, ou toute autre instance
-MySQL 8) :
+testé fonctionnellement (`tests/Entity/EntityGraphTest.php`, `tests/Controller/Admin/AdminBackofficeTest.php`)
+via une base **SQLite locale**, le démon Docker n'étant pas démarrable dans l'environnement
+d'amorçage (permissions du bac à sable). **Aucune migration Doctrine n'a donc encore été
+générée** : une migration produite depuis SQLite serait dans le mauvais dialecte SQL pour la cible
+MySQL. Dès qu'une base MySQL est joignable (`docker compose up -d database` sur une machine où
+Docker fonctionne, ou toute autre instance MySQL 8) :
 
 ```
 php bin/console doctrine:migrations:diff
@@ -114,12 +159,18 @@ php bin/console doctrine:migrations:migrate
 - **Phase 1 (socle technique)** : squelette Symfony 6.4 LTS, structure de dossiers par domaine,
   fondations i18n, CI — terminée.
 - **Phase 2 (modèle de données cible)** : 9 entités écrites et validées (mapping + tests
-  fonctionnels). Reste à faire avant la phase 3 : générer la migration Doctrine contre une vraie
-  base MySQL (voir ci-dessus) et écrire le script d'import des données de l'ancien dépôt
+  fonctionnels) — terminée. Reste en dette : générer la migration Doctrine contre une vraie base
+  MySQL (voir ci-dessus) et écrire le script d'import des données de l'ancien dépôt
   `thenotilus/afkr` (mots-clés existants repris comme pré-validés, §11.4).
+- **Phase 3 (back-office EasyAdmin)** : 9 écrans CRUD + dashboard, écran de validation des
+  mots-clés avec actions individuelles et en masse — terminée. Testée par
+  `tests/Controller/Admin/AdminBackofficeTest.php`. Reste en dette : formulaire de connexion
+  public (actuellement 401 pour un visiteur anonyme, faute de point d'entrée d'authentification —
+  prévu en phase 6 avec les autres pages publiques).
 
-Le back-office, le pipeline de classification et les pages publiques sont des phases ultérieures
-(voir le tableau de phasage en §11.2 de la documentation fonctionnelle).
+Le pipeline de classification (phase 4), le crawling multi-bots (phase 5) et les pages publiques
+(phase 6) sont les étapes suivantes (voir le tableau de phasage en §11.2 de la documentation
+fonctionnelle).
 
 ## Suivi des dépendances de développement
 

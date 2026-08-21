@@ -1,0 +1,57 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Tableau de bord{% endblock %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3 border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Suggestions de mots-clés en attente</h5>
+                    <p class="display-6">{{ pendingSuggestionsCount }}</p>
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\TaxonomyCrudController').generateUrl() }}" class="btn btn-warning">
+                        Traiter les suggestions
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Flux actifs</h5>
+                    <p class="display-6">{{ activeFeedsCount }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Articles</h5>
+                    <p class="display-6">{{ recentArticlesCount }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if pendingSuggestions|length > 0 %}
+        <h5 class="mt-4">Dernières suggestions</h5>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Mot-clé</th>
+                <th>Langue</th>
+                <th>Détecté le</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for taxonomy in pendingSuggestions|slice(0, 10) %}
+                <tr>
+                    <td>{{ taxonomy.label }}</td>
+                    <td>{{ taxonomy.language.label }}</td>
+                    <td>{{ taxonomy.createdAt|date('d/m/Y H:i') }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

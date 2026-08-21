@@ -43,8 +43,22 @@ le plan détaillé dans la documentation fonctionnelle.
       `docs/architecture.md` — action à faire dès qu'une base est joignable)
 - [ ] Script d'import des données de l'ancien dépôt `thenotilus/afkr`
 
-Les phases suivantes (back-office, moteur de classification, crawling, pages publiques...) sont
-détaillées dans le tableau de phasage (§11.2 de la documentation fonctionnelle).
+**Phase 3 — Back-office EasyAdmin** :
+
+- [x] Dashboard avec compteur de suggestions en attente (`src/Controller/Admin/`)
+- [x] 9 écrans CRUD (Flux, Articles, Taxonomies, Pays, "Unes", Publications, Utilisateurs,
+      Abonnés newsletter, Newsletters hebdomadaires)
+- [x] Écran de validation des mots-clés : actions "Valider"/"Rejeter" individuelles et en masse,
+      filtres par statut/langue — voir `docs/architecture.md` pour les détails d'implémentation
+      EasyAdmin 5.x et les pièges rencontrés
+- [x] Champs association restreints aux taxonomies validées partout où un mot-clé est sélectionné
+      manuellement (Unes, newsletters)
+- [x] Test de fumée bout en bout sur les 9 écrans + le circuit de validation
+      (`tests/Controller/Admin/AdminBackofficeTest.php`)
+- [ ] Formulaire de connexion public (prévu en phase 6 avec le reste des pages publiques)
+
+Les phases suivantes (moteur de classification, crawling, pages publiques...) sont détaillées
+dans le tableau de phasage (§11.2 de la documentation fonctionnelle).
 
 ## Démarrage local
 
