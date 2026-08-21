@@ -765,9 +765,21 @@ métadonnées.
 | 4. Moteur de classification bilingue FR/EN | Pipeline de normalisation/stopwords/stemming/scoring (§10.1-10.2), **bilingue dès le départ** (détection de langue, stopwords/stemming/entités nommées par langue), produisant des suggestions consommées par la phase 3 ; les pays sont détectés comme entités nommées et rattachés nativement aux articles (§3.13) | `ClassificationService`, tests unitaires, fixtures FR **et** EN | Phases 2 et 3 |
 | 5. Système de crawling multi-bots | Extraction de métadonnées en repli du flux RSS, pool de bots/user-agents, throttling **agrégé par domaine** (§9.4) | `CrawlerService`, `BotProfileRegistry`, file d'attente asynchrone, tableau de bord par domaine | Phase 1 |
 | 6. Modules front (bilingues) | Réécriture des "Unes" utilisateur, de la page **"actualité par pays"** (croisement pays × mot-clé + archives paginées, §3.13), de la recherche et du SEO/sitemap ; interface publique bilingue FR/EN avec sélecteur de langue | Pages publiques fonctionnelles sur le nouveau socle | Phases 3, 4 |
-| 7. Newsletter hebdomadaire | Réécriture de l'envoi hebdomadaire (SendinBlue) sur le corpus de mots-clés validés, avec gestion d'une liste d'abonnés dédiée (~40 destinataires actuels, §3.7) — la newsletter quotidienne **n'est pas reprise** | Commande/handler Messenger dédié | Phase 6 |
-| 8. Double-run & bascule | Exécution en parallèle ancien/nouveau système sur l'extraction/classification continues, comparaison des résultats, puis bascule DNS/déploiement | Rapport de comparaison, plan de bascule, rollback documenté | Phases 4 à 7 |
+| 7. *(en pause)* Newsletter hebdomadaire | Réécriture de l'envoi hebdomadaire (SendinBlue) sur le corpus de mots-clés validés, avec gestion d'une liste d'abonnés dédiée (~40 destinataires actuels, §3.7) — la newsletter quotidienne **n'est pas reprise** | Commande/handler Messenger dédié | Phase 6 — **mise en attente décidée par le porteur produit** (voir note ci-dessous) |
+| 8. Validation & bascule | L'ancienne application (`thenotilus/afkr`) **n'est plus en exploitation** : le double-run ancien/nouveau système initialement prévu (exécution en parallèle, comparaison des résultats d'extraction/classification) n'est donc plus possible faute de système de référence actif à comparer. La validation avant bascule doit s'appuyer sur d'autres moyens : réindexation du corpus historique déjà importé (§11.2 phase 2) avec le nouveau pipeline et revue éditoriale par échantillonnage, plutôt qu'une comparaison automatisée en continu. Reste à clarifier avec le porteur produit (voir §12.2) : dispose-t-on d'un export/sauvegarde de la base de l'ancienne application à des fins de comparaison ponctuelle, et quel est le plan de secours en cas de problème après bascule, sachant qu'un retour à l'ancien système n'est plus une option de repli immédiate | Plan de validation par échantillonnage, plan de bascule, procédure de secours (sans retour à l'ancien système) | Phases 4 à 6 (7 en pause) |
 | 9. *(hors périmètre initial)* Partage réseaux sociaux | Réactivation du partage automatique Facebook/Twitter (§3.8), en phase **ultérieure au lancement** de la refonte | Uniquement l'interface d'extension `Social/` posée en phase 1-2 ; l'intégration effective est traitée plus tard | Phase 8 (post-lancement) |
+
+**Deux décisions du porteur produit, en cours de refonte (postérieures aux réponses de §12.1)** :
+
+1. **La newsletter hebdomadaire (phase 7) est mise en pause.** Aucune date de reprise n'est fixée à
+   ce stade. La phase 6 (pages publiques) ne dépend pas de la phase 7 et peut donc se poursuivre
+   sans elle ; en revanche toute étape qui présupposait la newsletter comme prérequis (aucune dans
+   le phasage actuel) devra être réévaluée si elle est réintroduite plus tard.
+2. **L'ancienne application (`thenotilus/afkr`) n'est plus en exploitation.** Cela invalide le
+   principe même de la phase 8 telle que documentée initialement (double-run comparatif contre un
+   système de référence vivant) : voir la ligne "Validation & bascule" ci-dessus pour l'approche de
+   remplacement retenue par défaut, et §12.2 pour les points encore à trancher avec le porteur
+   produit à ce sujet.
 
 ### 11.3 Jalon critique : le circuit de validation avant tout branchement front
 
@@ -829,6 +841,13 @@ intégrées dans le corps du document (renvois ci-dessous) :
 5. **Mécanisme technique exact du fonctionnement continu actuel** (§6, §8 point 12) : boucle shell,
    superviseur (systemd/Supervisor), ou cron à cadence très rapprochée ? Utile pour dimensionner
    les futurs workers Messenger et sécuriser l'absence de chevauchement d'exécutions.
+6. **Reprise de la newsletter hebdomadaire** (§11.2 phase 7, mise en pause) : la mise en pause
+   est-elle temporaire (reprise prévue à une date/jalon donné) ou la fonctionnalité est-elle
+   remise en question pour la refonte ? Conditionne si la question 2 ci-dessus reste à trancher.
+7. **Validation de la bascule sans ancienne application active** (§11.2 phase 8, redéfinie) :
+   existe-t-il un export ou une sauvegarde de la base de l'ancienne application permettant une
+   comparaison ponctuelle avant bascule (même partielle), et quelle procédure de secours prévoir
+   en cas de problème après bascule, sachant qu'un retour à l'ancien système n'est plus disponible ?
 
 ---
 

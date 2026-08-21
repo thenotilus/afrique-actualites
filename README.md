@@ -113,8 +113,10 @@ le plan détaillé dans la documentation fonctionnelle.
 - [ ] Mot-clé optionnel dans le croisement pays × mot-clé et profondeur des archives : réponses
       par défaut retenues faute de réponse du porteur produit (§12.2 point 1)
 
-Les phases suivantes (newsletter hebdomadaire, double-run & bascule...) sont détaillées dans le
-tableau de phasage (§11.2 de la documentation fonctionnelle).
+**Phase 7 (newsletter hebdomadaire) est en pause** (décision du porteur produit) et **la phase 8
+a été redéfinie** : l'ancienne application n'étant plus en exploitation, le double-run comparatif
+initialement prévu n'est plus possible — voir §11.2 de la documentation fonctionnelle pour
+l'approche de validation/bascule de remplacement.
 
 ## Démarrage local
 
