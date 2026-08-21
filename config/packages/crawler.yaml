@@ -1,0 +1,19 @@
+parameters:
+    # Pool de profils de bots (§9.4), essayés dans l'ordre déclaré. Chaque user-agent s'identifie
+    # explicitement comme le bot d'Afrique Actualités — jamais d'usurpation d'un navigateur ou
+    # d'un autre robot pour contourner un blocage (respect des CGU des sites sources, §11.4).
+    crawler.bot_profiles:
+        - name: afrique-actualites-bot-1
+          user_agent: 'AfriqueActualitesBot/1.0 (+https://www.afrique-actualites.com/a-propos/bot; crawl@afrique-actualites.com)'
+          additional_headers:
+              Accept: 'text/html,application/xhtml+xml'
+          timeout: 6.0
+        - name: afrique-actualites-bot-2
+          user_agent: 'AfriqueActualitesBot/1.0 (Metadata Fetcher; +https://www.afrique-actualites.com/a-propos/bot; crawl@afrique-actualites.com)'
+          additional_headers:
+              Accept: 'text/html,application/xhtml+xml'
+              Accept-Language: 'fr,en;q=0.5'
+          timeout: 10.0
+
+    # Durée de mise en cache (secondes) d'un résultat de crawl réussi, par URL (§9.4).
+    crawler.cache_ttl: 86400

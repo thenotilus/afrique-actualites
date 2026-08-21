@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Article\Entity\Article;
+use App\Crawler\Repository\CrawlAttemptRepository;
 use App\Feed\Entity\Feed;
 use App\Taxonomy\Entity\Taxonomy;
 use App\Taxonomy\Enum\TaxonomyStatus;
@@ -22,8 +23,10 @@ use Symfony\Component\HttpFoundation\Response;
 #[AdminDashboard(routePath: '/admin', routeName: 'admin')]
 class DashboardController extends AbstractDashboardController
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly CrawlAttemptRepository $crawlAttemptRepository,
+    ) {
     }
 
     public function index(): Response
@@ -36,6 +39,7 @@ class DashboardController extends AbstractDashboardController
             'pendingSuggestions' => $taxonomyRepository->findPendingSuggestions(),
             'activeFeedsCount' => $this->entityManager->getRepository(Feed::class)->count(['active' => true]),
             'recentArticlesCount' => $this->entityManager->getRepository(Article::class)->count([]),
+            'crawlSuccessRateByDomain' => $this->crawlAttemptRepository->successRateByDomain(),
         ]);
     }
 
@@ -60,6 +64,9 @@ class DashboardController extends AbstractDashboardController
 
         yield MenuItem::section('Géographie');
         yield MenuItem::linkTo(CountryCrudController::class, 'Pays', 'fa fa-earth-africa');
+
+        yield MenuItem::section('Crawling');
+        yield MenuItem::linkTo(CrawlAttemptCrudController::class, 'Tentatives de crawl', 'fa fa-spider');
 
         yield MenuItem::section('"Unes" & publications');
         yield MenuItem::linkTo(UserNewsCrudController::class, '"Unes"', 'fa fa-layer-group');

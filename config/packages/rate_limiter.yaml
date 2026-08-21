@@ -1,0 +1,10 @@
+framework:
+    rate_limiter:
+        # Throttling agrégé par domaine du crawling de repli (§9.4) : `RateLimiterFactory::create($domain)`
+        # crée une instance de limiteur distincte par domaine à partir de cette unique politique,
+        # ce qui garantit qu'un média multi-flux sur un même domaine ne reçoit pas mécaniquement
+        # plus de requêtes de crawl qu'un média mono-flux (§11.4).
+        crawler_per_domain:
+            policy: sliding_window
+            limit: 12
+            interval: '1 minute'

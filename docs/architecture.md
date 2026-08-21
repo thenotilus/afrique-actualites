@@ -17,6 +17,7 @@ src/
   Feed/            Gestion des flux RSS/Atom (multilingues)
   Article/         Agrégation et publication des articles
   Classification/  Moteur de détection de mots-clés (pipeline bilingue FR/EN, voir §10)
+  Crawler/         Crawling de repli multi-bots, en complément du flux RSS (voir §9.4)
   Taxonomy/        Mots-clés (suggestion → validation, voir §4.4/§10.4)
   Geography/       Pays, croisement pays × mot-clé, archives (voir §3.13)
   News/            "Unes" thématiques utilisateur
@@ -162,6 +163,53 @@ d'articles français et anglais aux titres réalistes, vérifiant la création d
 séparation des espaces de taxonomies par langue, la promotion automatique d'un mot-clé déjà validé
 et le rattachement des pays).
 
+## Crawling multi-bots de repli (phase 5)
+
+`src/Crawler/CrawlerService.php` orchestre un crawl HTTP de secours (§9.4 de la documentation
+fonctionnelle) : il n'intervient que si le flux RSS n'a pas déjà fourni le titre, l'image ou la
+description d'un article ("déclenchement conditionnel") — jamais en remplacement systématique du
+flux. C'est `CrawlArticleMetaMessageHandler` (déclenché de façon asynchrone via Messenger,
+`App\Crawler\Message\CrawlArticleMetaMessage`) qui applique cette garde, et qui ne complète que les
+champs réellement manquants sur l'`Article` : un crawl réussi n'écrase jamais une valeur déjà
+fournie par le flux.
+
+`CrawlerService` essaie dans l'ordre les profils du pool (`BotProfileRegistry`, configuré dans
+`config/packages/crawler.yaml`) jusqu'à obtenir des métadonnées exploitables (repli en cascade) :
+- chaque profil (`BotProfile`) porte son propre user-agent et ses en-têtes HTTP, mais s'identifie
+  toujours explicitement comme le bot d'Afrique Actualités — jamais d'usurpation d'un navigateur
+  ou d'un autre robot pour contourner un blocage ;
+- `RobotsTxtChecker` respecte les règles d'exclusion du site source avant toute requête (implémen-
+  tation volontairement simplifiée : seul le groupe `User-agent: *` est interprété — voir son
+  docblock) ;
+- `OpenGraphMetaExtractor` (`MetaExtractorInterface`) extrait les balises Open Graph/Twitter Cards
+  en priorité, avec repli sur `<title>`/`<meta name="description">` ;
+- le throttling est **agrégé par domaine** et non par flux (`RateLimiterFactory` nommé
+  `crawler_per_domain`, `config/packages/rate_limiter.yaml`) : un média qui expose plusieurs flux
+  RSS sur le même domaine ne reçoit donc pas mécaniquement plus de requêtes de crawl qu'un média
+  mono-flux (§11.4) ;
+- si le quota d'un domaine est épuisé, `CrawlerService` lève `CrawlRateLimitedException` **sans
+  tenter aucune requête HTTP**, plutôt que de bloquer le worker sur une attente (`usleep`) : c'est
+  `CrawlArticleMetaMessageHandler` qui reprogramme le message via un `DelayStamp` ;
+- un résultat de crawl réussi est mis en cache par URL (pool PSR-6 dédié `cache.crawler`,
+  `config/packages/cache.yaml`) pour éviter de re-crawler une page déjà traitée récemment ;
+- chaque requête HTTP réellement envoyée est journalisée (`CrawlAttempt`, domaine, profil de bot,
+  succès, code HTTP) — un refus par `robots.txt` n'en crée pas, faute de requête émise. Ce journal
+  alimente le tableau de bord du back-office (taux de succès par domaine, ligne mise en évidence
+  si un domaine bloque systématiquement tous les profils) et l'écran `CrawlAttemptCrudController`
+  (lecture seule).
+
+Le transport Messenger reste `sync` à ce stade (même limitation de scaffolding que documentée plus
+haut pour les traitements continus) : un vrai transport en file d'attente est à brancher avant la
+mise en production.
+
+Testé par `tests/Crawler/RobotsTxtCheckerTest.php`, `tests/Crawler/OpenGraphMetaExtractorTest.php`
+et `tests/Crawler/BotProfileRegistryTest.php` (chaque composant en isolation, via `MockHttpClient`
+pour les deux premiers) ; `tests/Crawler/CrawlerServiceTest.php` (intégration : repli en cascade,
+respect de `robots.txt`, mise en cache, abandon sans requête HTTP au quota épuisé) ;
+`tests/Crawler/Message/CrawlArticleMetaMessageHandlerTest.php` (garde de non-écrasement, reprogram-
+mation au lieu de bloquer) ; `tests/Crawler/Repository/CrawlAttemptRepositoryTest.php` (agrégation
+par domaine).
+
 ## Modèle de données (phase 2)
 
 Les entités vivent sous `src/<Domaine>/Entity/` (voir liste ci-dessus). Points de conception à
@@ -225,11 +273,20 @@ php bin/console doctrine:migrations:migrate
   `ClassificationService` n'a encore aucun appelant (aucune commande/worker ne l'injecte), donc le
   compilateur de conteneur Symfony l'élague comme service inutilisé en environnement de test — les
   tests d'intégration le construisent directement avec ses dépendances réelles plutôt que de le
-  récupérer depuis le conteneur. Ce point se résout naturellement dès que la phase 5 (worker
-  d'extraction) l'injecte comme dépendance réelle.
+  récupérer depuis le conteneur. Toujours vrai après la phase 5 (crawling) : celle-ci ne branche
+  pas `ClassificationService`, qui reste sans appelant tant que le futur worker d'extraction/
+  classification continu (§6) n'existe pas.
+- **Phase 5 (crawling multi-bots)** : `CrawlerService`, `BotProfileRegistry`, repli en cascade
+  entre profils de bots, respect de `robots.txt`, throttling agrégé par domaine, mise en cache par
+  URL, journal `CrawlAttempt` et tableau de bord par domaine — terminée. Testée par
+  `tests/Crawler/**/*Test.php`. `CrawlArticleMetaMessageHandler` a désormais un appelant réel
+  (`CrawlerService` n'est donc plus élagué du conteneur, à la différence de `ClassificationService`
+  ci-dessus), mais le transport Messenger reste `sync` : aucun worker d'extraction RSS n'existe
+  encore pour dispatcher `CrawlArticleMetaMessage` en conditions réelles — ce sera le rôle du
+  futur worker continu (§6).
 
-Le crawling multi-bots (phase 5) et les pages publiques (phase 6) sont les étapes suivantes (voir
-le tableau de phasage en §11.2 de la documentation fonctionnelle).
+Les pages publiques (phase 6) sont l'étape suivante (voir le tableau de phasage en §11.2 de la
+documentation fonctionnelle).
 
 ## Suivi des dépendances de développement
 

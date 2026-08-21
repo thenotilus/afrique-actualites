@@ -3,6 +3,7 @@
 namespace App\Tests\Controller\Admin;
 
 use App\Article\Entity\Article;
+use App\Crawler\Entity\CrawlAttempt;
 use App\Feed\Entity\Feed;
 use App\Geography\Entity\Country;
 use App\News\Entity\Publication;
@@ -50,6 +51,24 @@ final class AdminBackofficeTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testDashboardShowsCrawlSuccessRateByDomain(): void
+    {
+        $client = $this->bootClientWithSchema();
+        $client->loginUser($this->createAdmin());
+
+        $this->entityManager->persist(new CrawlAttempt('exemple.com', 'https://exemple.com/a', 'afrique-actualites-bot-1', true, 200));
+        $this->entityManager->persist(new CrawlAttempt('exemple.com', 'https://exemple.com/b', 'afrique-actualites-bot-1', false, 403));
+        $this->entityManager->persist(new CrawlAttempt('bloque.com', 'https://bloque.com/a', 'afrique-actualites-bot-2', false, 403));
+        $this->entityManager->flush();
+
+        $crawler = $client->request('GET', '/admin');
+
+        self::assertResponseIsSuccessful();
+        $bodyText = $crawler->filter('body')->text();
+        self::assertStringContainsString('exemple.com', $bodyText);
+        self::assertStringContainsString('bloque.com', $bodyText);
+    }
+
     public function testDashboardRejectsAnonymousVisitors(): void
     {
         $client = $this->bootClientWithSchema();
@@ -86,6 +105,7 @@ final class AdminBackofficeTest extends WebTestCase
         yield 'User' => [\App\Controller\Admin\UserCrudController::class];
         yield 'NewsletterSubscriber' => [\App\Controller\Admin\NewsletterSubscriberCrudController::class];
         yield 'WeeklyNewsletter' => [\App\Controller\Admin\WeeklyNewsletterCrudController::class];
+        yield 'CrawlAttempt' => [\App\Controller\Admin\CrawlAttemptCrudController::class];
     }
 
     public function testValidatingASuggestionFromTheAdminScreenMakesItAKeyword(): void
@@ -179,6 +199,9 @@ final class AdminBackofficeTest extends WebTestCase
         $newsletter->addKeyword($taxonomy);
         $newsletter->addArticle($article);
         $this->entityManager->persist($newsletter);
+
+        $crawlAttempt = new CrawlAttempt('example.com', 'https://example.com/article', 'afrique-actualites-bot-1', true, 200);
+        $this->entityManager->persist($crawlAttempt);
 
         $this->entityManager->flush();
     }

@@ -10,8 +10,12 @@ framework:
             sync: 'sync://'
 
         routing:
-            # Route your messages to the transports
-            # 'App\Message\YourMessage': async
+            # Le crawl de repli (§9.4) doit rester asynchrone pour ne jamais bloquer l'extraction
+            # RSS principale sur un site source lent — mais un vrai transport en file d'attente
+            # (Doctrine, Redis...) reste à brancher avant la mise en production : voir la note sur
+            # les traitements continus dans docs/architecture.md. Le transport `sync` ci-dessus
+            # n'est qu'un point de départ de scaffolding.
+            App\Crawler\Message\CrawlArticleMetaMessage: sync
 
 # when@test:
 #    framework:

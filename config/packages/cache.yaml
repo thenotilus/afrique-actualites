@@ -15,5 +15,8 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Résultats de crawl de repli mis en cache par URL (§9.4), pour éviter de re-crawler
+            # une page déjà traitée récemment. Pool dédié pour purger/observer indépendamment du
+            # reste du cache applicatif.
+            cache.crawler: null

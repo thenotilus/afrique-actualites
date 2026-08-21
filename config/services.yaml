@@ -51,3 +51,17 @@ services:
         arguments:
             $minDocumentFrequency: '%classification.min_document_frequency%'
             $maxDocumentFrequencyRatio: '%classification.max_document_frequency_ratio%'
+
+    # Crawling multi-bots (§9.4) : une seule implémentation d'extraction de métadonnées à ce
+    # stade, derrière une interface pour rester remplaçable (ex. un extracteur dédié pour un site
+    # aux balises non standard) sans toucher à l'orchestration.
+    App\Crawler\MetaExtractorInterface: '@App\Crawler\OpenGraphMetaExtractor'
+
+    App\Crawler\BotProfileRegistry:
+        arguments:
+            $profileConfigs: '%crawler.bot_profiles%'
+
+    App\Crawler\CrawlerService:
+        arguments:
+            $crawlerCache: '@cache.crawler'
+            $cacheTtlSeconds: '%crawler.cache_ttl%'

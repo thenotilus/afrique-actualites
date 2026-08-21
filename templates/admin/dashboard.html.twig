@@ -54,4 +54,28 @@
             </tbody>
         </table>
     {% endif %}
+
+    {% if crawlSuccessRateByDomain|length > 0 %}
+        <h5 class="mt-4">Taux de succès du crawling par domaine</h5>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Domaine</th>
+                <th>Tentatives</th>
+                <th>Succès</th>
+                <th>Taux</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in crawlSuccessRateByDomain %}
+                <tr{% if row.success == 0 %} class="table-danger"{% endif %}>
+                    <td>{{ row.domain }}</td>
+                    <td>{{ row.total }}</td>
+                    <td>{{ row.success }}</td>
+                    <td>{{ (row.success / row.total * 100)|round(1) }}&nbsp;%</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock %}

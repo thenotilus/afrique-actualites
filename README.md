@@ -73,8 +73,27 @@ le plan détaillé dans la documentation fonctionnelle.
 - [x] Tests unitaires par étape du pipeline + test d'intégration bout en bout sur un lot
       d'articles réalistes FR/EN (`tests/Classification/`)
 
-Les phases suivantes (crawling multi-bots, pages publiques...) sont détaillées dans le tableau de
-phasage (§11.2 de la documentation fonctionnelle).
+**Phase 5 — Crawling multi-bots** :
+
+- [x] Pool de profils de bots configurable (`src/Crawler/BotProfileRegistry.php`,
+      `config/packages/crawler.yaml`), user-agents toujours explicitement identifiés
+- [x] Repli en cascade entre profils (`CrawlerService`) jusqu'à obtenir des métadonnées
+      exploitables ou épuisement du pool
+- [x] Respect de `robots.txt` (`RobotsTxtChecker`) avant toute requête
+- [x] Throttling agrégé **par domaine**, pas par flux (`config/packages/rate_limiter.yaml`)
+- [x] Extraction Open Graph/Twitter Cards avec repli sur les balises HTML standard
+      (`OpenGraphMetaExtractor`)
+- [x] Déclenchement conditionnel et asynchrone (`CrawlArticleMetaMessage`/Handler) : ne complète
+      que les champs manquants, n'écrase jamais une valeur déjà fournie par le flux RSS
+- [x] Mise en cache par URL des résultats réussis, journal des tentatives (`CrawlAttempt`) et
+      tableau de bord par domaine dans le back-office
+- [x] Tests unitaires par composant + tests d'intégration (cascade, `robots.txt`, cache, quota)
+      (`tests/Crawler/`)
+- [ ] Transport Messenger asynchrone réel (reste en `sync` — aucun worker d'extraction RSS
+      continu n'existe encore pour dispatcher les messages en conditions réelles, voir §6)
+
+Les phases suivantes (pages publiques...) sont détaillées dans le tableau de phasage (§11.2 de la
+documentation fonctionnelle).
 
 ## Démarrage local
 
