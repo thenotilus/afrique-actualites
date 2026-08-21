@@ -1,0 +1,8 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ feed.label ?? feed.url }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ feed.label ?? feed.url }}</h1>
+    {% include 'public/_article_list.html.twig' %}
+{% endblock %}

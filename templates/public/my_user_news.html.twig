@@ -1,0 +1,41 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'my_user_news.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'my_user_news.title'|trans }}</h1>
+    <p><a class="btn" href="{{ path('app_user_news_new') }}">{{ 'my_user_news.new'|trans }}</a></p>
+
+    {% if userNewsList|length == 0 %}
+        <p class="empty-state">{{ 'my_user_news.empty'|trans }}</p>
+    {% else %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 1px solid #e5e2da;">
+                    <th>{{ 'my_user_news.column_label'|trans }}</th>
+                    <th>{{ 'my_user_news.column_visibility'|trans }}</th>
+                    <th>{{ 'my_user_news.column_actions'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for userNews in userNewsList %}
+                    <tr style="border-bottom: 1px solid #f0ede4;">
+                        <td><a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a></td>
+                        <td>{{ userNews.private ? 'my_user_news.private'|trans : 'my_user_news.public'|trans }}</td>
+                        <td>
+                            <a href="{{ path('app_user_news_edit', {id: userNews.id}) }}">{{ 'my_user_news.edit'|trans }}</a>
+                            <form class="inline" method="post" action="{{ path('app_user_news_duplicate', {id: userNews.id}) }}" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('user_news_duplicate_' ~ userNews.id) }}">
+                                <button type="submit" class="btn-secondary">{{ 'my_user_news.duplicate'|trans }}</button>
+                            </form>
+                            <form class="inline" method="post" action="{{ path('app_user_news_delete', {id: userNews.id}) }}" style="display: inline;" onsubmit="return confirm('{{ 'my_user_news.confirm_delete'|trans }}')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('user_news_delete_' ~ userNews.id) }}">
+                                <button type="submit" class="btn-secondary">{{ 'my_user_news.delete'|trans }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

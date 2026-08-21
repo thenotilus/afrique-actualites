@@ -1,0 +1,21 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    {% if featuredArticle %}
+        <article class="article-card" style="border: 1px solid #e5e2da; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+            {% if featuredArticle.image %}
+                <img src="{{ featuredArticle.image }}" alt="" style="width: 220px; height: 150px;">
+            {% endif %}
+            <div>
+                <span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span>
+                <h2><a href="{{ path('app_article_show', {id: featuredArticle.id, slug: featuredArticle.title|slugify}) }}">{{ featuredArticle.title }}</a></h2>
+                <div class="article-meta">{{ featuredArticle.publicationDate|date('d/m/Y H:i') }}</div>
+            </div>
+        </article>
+    {% endif %}
+
+    <h1>{{ 'home.latest_articles'|trans }}</h1>
+    {% include 'public/_article_list.html.twig' %}
+{% endblock %}

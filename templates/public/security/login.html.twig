@@ -1,0 +1,26 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'login.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'login.title'|trans }}</h1>
+    <p>{{ 'login.intro'|trans }}</p>
+
+    {% if error %}
+        <div class="flash flash-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+
+    <form class="stacked" method="post" action="{{ path('app_login') }}">
+        <label for="username">{{ 'login.email'|trans }}</label>
+        <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus>
+
+        <label for="password">{{ 'login.password'|trans }}</label>
+        <input type="password" id="password" name="_password" required>
+
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        <p><button type="submit">{{ 'login.submit'|trans }}</button></p>
+    </form>
+
+    <p>{{ 'login.no_account'|trans }} <a href="{{ path('app_register') }}">{{ 'login.register_link'|trans }}</a></p>
+{% endblock %}

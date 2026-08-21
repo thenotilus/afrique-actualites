@@ -1,0 +1,17 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'user_news_index.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'user_news_index.title'|trans }}</h1>
+
+    {% if userNewsList|length == 0 %}
+        <p class="empty-state">{{ 'user_news_index.empty'|trans }}</p>
+    {% else %}
+        <div class="country-grid">
+            {% for userNews in userNewsList %}
+                <a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

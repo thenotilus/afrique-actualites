@@ -1,0 +1,8 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ userNews.label }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ userNews.label }}</h1>
+    {% include 'public/_article_list.html.twig' %}
+{% endblock %}

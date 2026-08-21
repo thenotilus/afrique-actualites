@@ -11,3 +11,14 @@ controllers:
         _locale: fr|en
     defaults:
         _locale: fr
+
+# Index de sitemaps à la racine (/sitemap.xml, sans préfixe de locale), qu'un moteur de recherche
+# attend à cet emplacement précis (§3.10). Vit hors de src/Controller/ précisément pour échapper
+# au préfixe /{_locale} ci-dessus — voir le docblock de SitemapIndexController pour le détail
+# (l'option `exclude` du loader de routes par attributs ne fonctionne pas pour un seul fichier au
+# sein d'un répertoire déjà importé).
+sitemap_index:
+    resource:
+        path: ../src/Sitemap/Controller/
+        namespace: App\Sitemap\Controller
+    type: attribute

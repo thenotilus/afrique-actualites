@@ -17,10 +17,14 @@ security:
             provider: app_user_provider
             logout:
                 path: app_logout
-
-            # L'authentification (formulaire + connexion sociale Facebook) est mise en place en
-            # phase 3/6 du plan de refonte, avec le back-office et les pages publiques — voir
-            # docs/documentation-fonctionnelle.md §11.2.
+            # Formulaire email/mot de passe (§3.4, phase 6) : la connexion sociale Facebook
+            # évoquée dans le prompt de conception UX reste liée au partage réseaux sociaux,
+            # différé à une phase ultérieure (§3.8, §11.2 phase 9).
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                default_target_path: app_home
+                enable_csrf: true
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true

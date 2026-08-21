@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for locale, chunkCount in chunksByLocale %}
+    {% for page in 1..chunkCount %}
+    <sitemap>
+        <loc>{{ url('app_sitemap_locale', {_locale: locale, page: page}) }}</loc>
+    </sitemap>
+    {% endfor %}
+{% endfor %}
+</sitemapindex>

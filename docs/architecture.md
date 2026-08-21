@@ -24,8 +24,10 @@ src/
   Newsletter/       Newsletter hebdomadaire et gestion des abonnés
   Social/          Partage réseaux sociaux — interfaces posées, implémentation différée (§3.8)
   User/            Compte utilisateur, sécurité
-  Shared/          Code transverse : Utils/, ValueObject/, Dto/
+  Shared/          Code transverse : Utils/, ValueObject/, Dto/, Pagination/, Twig/
+  Sitemap/         Index de sitemaps racine (hors préfixe /{_locale}, voir plus bas)
   Controller/Admin/ Contrôleurs/Dashboard EasyAdmin (back-office unifié, §3.12)
+  Controller/      Contrôleurs publics (accueil, pays, recherche, "Unes", compte...), phase 6
 ```
 
 Chaque domaine porte, selon son besoin, ses propres sous-dossiers `Entity/`, `Repository/`,
@@ -50,8 +52,12 @@ obligatoires (voir la section Back-office ci-dessous pour l'erreur concrète que
 
 - Locales supportées : `fr` (défaut) et `en` (voir §3bis de la documentation fonctionnelle).
 - Routage : toutes les routes de contrôleur public sont préfixées par `/{_locale}`
-  (`config/routes.yaml`). Le back-office EasyAdmin n'est pas concerné par ce préfixe.
+  (`config/routes.yaml`). Le back-office EasyAdmin n'est pas concerné par ce préfixe — et le
+  sitemap-index racine non plus (voir plus bas, "Pages publiques").
 - Traductions : `translations/messages.fr.yaml` et `translations/messages.en.yaml`.
+- Sélecteur de langue (`templates/public/base.html.twig`) : régénère l'URL courante avec la même
+  route et les mêmes paramètres, seule la `_locale` change — fonctionne donc sans code spécifique
+  sur une page de détail (article, "Une", pays × mot-clé).
 - Le pipeline de classification (mots-clés) applique un traitement **par langue** (stopwords,
   racinisation, entités nommées) — voir §10.1.9 et §10.2 de la documentation fonctionnelle. Chaque
   `Taxonomy` est rattachée à une langue.
@@ -210,6 +216,76 @@ respect de `robots.txt`, mise en cache, abandon sans requête HTTP au quota épu
 mation au lieu de bloquer) ; `tests/Crawler/Repository/CrawlAttemptRepositoryTest.php` (agrégation
 par domaine).
 
+## Pages publiques (phase 6)
+
+Contrôleurs sous `src/Controller/` (préfixés `/{_locale}`, voir "Internationalisation" plus haut).
+Les listes d'articles (accueil, par flux, par mot-clé, par pays, résultats de recherche, page d'une
+"Une") partagent toutes le même partiel `templates/public/_article_list.html.twig` : seule la
+requête de base change (`ArticleRepository::publishedQueryBuilder()` + un filtre additionnel —
+`byFeed()`, `byKeyword()`, `byCountry()`, `byAnyKeyword()`, `bySearchQuery()`), pagination fournie
+par `App\Shared\Pagination\QueryPaginator` (au-dessus de `Doctrine\ORM\Tools\Pagination\Paginator`,
+sans bundle de pagination supplémentaire).
+
+- **Page pays** (`CountryController`, §3.13, écran prioritaire) : `/pays/{code}` puis
+  `/pays/{code}/{mot-clé}` pour le croisement. Le mot-clé du croisement est **optionnel** et les
+  archives sont **paginées sans borne de temps** — la question posée en §12.2 point 1 (mot-clé
+  obligatoire ? archives bornées à 12/24 mois ?) est restée sans réponse du porteur produit ; ce
+  sont les interprétations par défaut retenues, à ajuster si la réponse va dans l'autre sens. Les
+  mots-clés proposés dans le croisement (`TaxonomyRepository::findValidatedForCountry()`) sont
+  limités à ceux réellement présents sur au moins un article publié de ce pays.
+- **"Unes"** (`UserNewsController`, `UserNewsType`, §3.4) : annuaire public, page d'une "Une"
+  (articles réunissant l'un quelconque de ses mots-clés, `ArticleRepository::byAnyKeyword()`), et
+  gestion par l'utilisateur connecté (créer/éditer/dupliquer/supprimer, "mes Unes"). Le champ
+  `taxonomies` du formulaire est en `by_reference: false` : Symfony Form appelle alors
+  `UserNews::addTaxonomy()`/`removeTaxonomy()` plutôt que de remplacer la collection en bloc, ce
+  qui fait rejouer la garde de l'entité (taxonomie non validée refusée) — contrairement au
+  back-office EasyAdmin (§ section Back-office) où seule la restriction de `query_builder` protège,
+  la double garde est possible ici. La visibilité privée est réservée aux administrateurs : le
+  contrôleur la force à `false` après validation du formulaire si l'utilisateur courant n'est pas
+  admin, quoi que le formulaire ait transmis.
+- **Connexion/inscription** (`SecurityController`, `RegistrationController`, §3.4) : formulaire
+  natif Symfony `form_login` (email/mot de passe uniquement — la connexion Facebook évoquée dans le
+  prompt de conception UX reste liée au partage réseaux sociaux, différé en phase 9). L'inscription
+  reste facultative pour consulter le site : elle ne sert qu'à créer des "Unes" personnalisées. Pas
+  de réinitialisation de mot de passe oublié dans ce lot — reste en dette.
+- **Recherche** (`SearchController`, §3.5) : titre, description ou libellé d'un mot-clé validé
+  (`ArticleRepository::bySearchQuery()`), remplace la recherche par taxonomies uniquement de
+  l'ancienne application. Un moteur d'indexation dédié reste une amélioration future recommandée
+  (§9.1), pas un prérequis de cette phase.
+- **Newsletter** (`NewsletterController`) : simple capture d'email en pied de page
+  (`templates/public/base.html.twig`), cible d'un formulaire HTML brut plutôt qu'un Symfony Form —
+  un seul champ ne justifie pas cette machinerie. `NewsletterSubscriber` n'expose volontairement
+  aucun mutateur pour son email (identifiant fixé à la construction), d'où l'absence de
+  `data_class` sur ce point précis.
+- **Sitemap** (`SitemapIndexController` sous `src/Sitemap/Controller/`, `SitemapController` sous
+  `src/Controller/`, §3.10) : structure sitemap-index/sous-sitemaps que l'ancienne application
+  n'avait pas (un unique fichier plat limité aux 100 derniers articles). L'index racine
+  (`/sitemap.xml`, **sans** préfixe `/{_locale}` — un moteur de recherche l'attend à cet
+  emplacement précis) référence un sous-sitemap par langue, lui-même découpé par lots de
+  `SitemapController::CHUNK_SIZE` (5000) articles. **Piège rencontré** : l'option `exclude` du
+  loader de routes par attributs Symfony (`type: attribute` sur un répertoire) ne fonctionne pas
+  pour exclure un seul fichier au sein d'un répertoire déjà importé (elle est bien prise en compte
+  par le loader PSR-4 utilisé pour `services.yaml`, mais pas par `AttributeDirectoryLoader` pour le
+  routage) — la seule façon fiable d'obtenir une route non préfixée est de sortir physiquement ce
+  contrôleur du répertoire scanné par la ressource préfixée, avec sa propre ressource de routage
+  dédiée (voir `config/routes.yaml` et le docblock de `SitemapIndexController`).
+- **Slugs d'URL** (`App\Shared\Utils\Slugifier`, filtre Twig `slugify`) : purement cosmétiques
+  (`/article/{id}/{slug}`) — c'est l'identifiant qui identifie réellement la ressource, pas ce
+  fragment, donc aucune canonicalisation/redirection à gérer si le titre change après coup.
+
+Testé par `tests/Controller/PublicPagesTest.php` : rendu de chaque page publique (FR et EN),
+parcours de connexion (formulaire réel, pas seulement `loginUser()`) et d'inscription, et cycle de
+vie complet d'une "Une" par un utilisateur connecté (créer, apparaître publiquement, éditer,
+dupliquer, supprimer). **Piège de test rencontré** : `KernelBrowser` reboote le noyau à chaque
+`request()`, donc une entité chargée par le test *avant* une requête n'est jamais `===` à
+l'instance rechargée par le noyau rebooté *après* — comparer par identifiant (`getId()`) plutôt que
+par identité d'objet PHP, et appeler `$entityManager->clear()` avant de relire une entité modifiée
+par la requête précédente (même pattern déjà utilisé par `AdminBackofficeTest`, phase 3).
+
+Le formulaire de connexion existant, `AdminBackofficeTest::testDashboardRejectsAnonymousVisitors`
+et le test public équivalent attendent désormais une redirection vers `/fr/connexion` plutôt que le
+401 brut de la phase 3 (qui n'avait pas encore de point d'entrée d'authentification).
+
 ## Modèle de données (phase 2)
 
 Les entités vivent sous `src/<Domaine>/Entity/` (voir liste ci-dessus). Points de conception à
@@ -262,9 +338,8 @@ php bin/console doctrine:migrations:migrate
   `thenotilus/afkr` (mots-clés existants repris comme pré-validés, §11.4).
 - **Phase 3 (back-office EasyAdmin)** : 9 écrans CRUD + dashboard, écran de validation des
   mots-clés avec actions individuelles et en masse — terminée. Testée par
-  `tests/Controller/Admin/AdminBackofficeTest.php`. Reste en dette : formulaire de connexion
-  public (actuellement 401 pour un visiteur anonyme, faute de point d'entrée d'authentification —
-  prévu en phase 6 avec les autres pages publiques).
+  `tests/Controller/Admin/AdminBackofficeTest.php`. Le formulaire de connexion public, alors en
+  dette, est livré en phase 6.
 - **Phase 4 (moteur de classification bilingue)** : pipeline complet (normalisation, tokenisation,
   filtrage de mots vides, racinisation, scoring, reconnaissance des pays), `ClassificationService`,
   référentiel des 54 pays d'Afrique + commande `app:country:fill` — terminée. Testée par
@@ -284,9 +359,16 @@ php bin/console doctrine:migrations:migrate
   ci-dessus), mais le transport Messenger reste `sync` : aucun worker d'extraction RSS n'existe
   encore pour dispatcher `CrawlArticleMetaMessage` en conditions réelles — ce sera le rôle du
   futur worker continu (§6).
+- **Phase 6 (pages publiques)** : accueil, listes (flux/mot-clé/pays/recherche), fiche article,
+  page pays avec croisement mot-clé et archives paginées, "Unes" (annuaire, page dédiée, gestion
+  utilisateur complète), connexion/inscription, capture newsletter, sitemap-index — terminée.
+  Testée par `tests/Controller/PublicPagesTest.php`. Reste en dette : réinitialisation de mot de
+  passe oublié, et le mot-clé du croisement pays × mot-clé / la profondeur des archives restent
+  des interprétations par défaut faute de réponse du porteur produit (§12.2 point 1) — voir la
+  section "Pages publiques" ci-dessus.
 
-Les pages publiques (phase 6) sont l'étape suivante (voir le tableau de phasage en §11.2 de la
-documentation fonctionnelle).
+Les modules restants du plan (newsletter hebdomadaire, double-run & bascule) sont les étapes
+suivantes (voir le tableau de phasage en §11.2 de la documentation fonctionnelle).
 
 ## Suivi des dépendances de développement
 

@@ -1,0 +1,56 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ article.title }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <article>
+        {% if article.feed and article.feed.sponsored %}
+            <span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span>
+        {% endif %}
+        <h1>{{ article.title }}</h1>
+        <p class="article-meta">
+            {% if article.feed and article.feed.label %}{{ article.feed.label }} · {% endif %}
+            {{ article.publicationDate|date('d/m/Y H:i') }}
+        </p>
+        {% if article.image %}
+            <img src="{{ article.image }}" alt="" style="max-width: 100%; border-radius: 8px;">
+        {% endif %}
+        {% if article.description %}
+            <p>{{ article.description }}</p>
+        {% endif %}
+
+        {% if article.keywords|length > 0 %}
+            <div class="keyword-tags">
+                {% for keyword in article.keywords %}
+                    <a href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">#{{ keyword.label }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if article.countries|length > 0 %}
+            <p>
+                {{ 'article_show.related_countries'|trans }}
+                {% for country in article.countries %}
+                    <a href="{{ path('app_country_show', {code: country.code}) }}">{{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}</a>{{ not loop.last ? ', ' }}
+                {% endfor %}
+            </p>
+        {% endif %}
+
+        <p><a href="{{ article.url }}" rel="nofollow noopener" target="_blank">{{ 'article_show.read_original'|trans }}</a></p>
+    </article>
+
+    {% if similarArticles|length > 0 %}
+        <h2>{{ 'article_show.similar'|trans }}</h2>
+        <div class="article-list">
+            {% for similar in similarArticles %}
+                <article class="article-card">
+                    {% if similar.image %}<img src="{{ similar.image }}" alt="" loading="lazy">{% endif %}
+                    <div>
+                        <h3><a href="{{ path('app_article_show', {id: similar.id, slug: similar.title|slugify}) }}">{{ similar.title }}</a></h3>
+                        <div class="article-meta">{{ similar.publicationDate|date('d/m/Y H:i') }}</div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

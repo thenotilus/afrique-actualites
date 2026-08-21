@@ -4,3 +4,111 @@
 app:
     site_name: "Afrique Actualités"
     tagline: "All African news, in real time and by country."
+
+nav:
+    home: "Home"
+    countries: "Countries"
+    user_news: "News lists"
+    search: "Search"
+    my_user_news: "My news lists"
+    login: "Log in"
+    logout: "Log out"
+
+footer:
+    newsletter_pitch: "Get the essential African news in your inbox every week."
+    newsletter_email_placeholder: "Your email address"
+    newsletter_submit: "Subscribe"
+
+pagination:
+    previous: "Previous"
+    next: "Next"
+    page_of: "Page %page% of %total%"
+
+article_list:
+    empty: "No articles yet."
+    sponsored: "Sponsored"
+    count: "%count% article(s)"
+
+article_show:
+    read_original: "Read the original article"
+    similar: "You may also like"
+    related_countries: "About:"
+
+home:
+    latest_articles: "Latest articles"
+
+country_index:
+    title: "News by country"
+    empty: "No active country yet."
+
+country_show:
+    filtered_by: "Filtered by keyword \"%keyword%\"."
+    clear_filter: "Clear filter"
+
+search:
+    title: "Search"
+    placeholder: "Search an article, a keyword..."
+    submit: "Search"
+    too_short: "Type at least two characters."
+    no_results: "No results for \"%query%\"."
+    try_keywords: "Try one of these keywords instead:"
+    results_count: "%count% result(s) for \"%query%\""
+
+user_news_index:
+    title: "News lists"
+    empty: "No public news list yet."
+
+my_user_news:
+    title: "My news lists"
+    new: "Create a news list"
+    empty: "You haven't created a news list yet."
+    column_label: "Name"
+    column_visibility: "Visibility"
+    column_actions: "Actions"
+    private: "Private"
+    public: "Public"
+    edit: "Edit"
+    duplicate: "Duplicate"
+    delete: "Delete"
+    confirm_delete: "Delete this news list?"
+
+user_news_form:
+    title_new: "Create a news list"
+    title_edit: "Edit the news list"
+    submit: "Save"
+
+user_news:
+    form:
+        label: "News list name"
+        taxonomies: "Keywords"
+        private: "Private news list (admin only)"
+    flash:
+        created: "The news list was created."
+        updated: "The news list was updated."
+        duplicated: "The news list was duplicated."
+        deleted: "The news list was deleted."
+
+login:
+    title: "Log in"
+    intro: "Log in to create and manage your personalized news lists."
+    email: "Email"
+    password: "Password"
+    submit: "Log in"
+    no_account: "No account yet?"
+    register_link: "Sign up"
+
+registration:
+    title: "Sign up"
+    intro: "Registration is optional: it is only needed to create personalized news lists."
+    submit: "Sign up"
+    form:
+        email: "Email"
+        password: "Password"
+        email_already_used: "An account already exists with this email."
+    flash:
+        success: "Your account was created, you can now log in."
+
+newsletter:
+    flash:
+        subscribed: "Thanks, your newsletter subscription is confirmed."
+        invalid: "Invalid email address."

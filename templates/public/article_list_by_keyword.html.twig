@@ -1,0 +1,9 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}#{{ keyword.label }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>#{{ keyword.label }}</h1>
+    <p class="article-meta">{{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</p>
+    {% include 'public/_article_list.html.twig' %}
+{% endblock %}

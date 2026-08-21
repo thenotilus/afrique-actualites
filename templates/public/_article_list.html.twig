@@ -1,0 +1,53 @@
+{#
+    Partial de liste d'articles réutilisé par l'accueil, les pages flux/mot-clé/pays/recherche/Une
+    (§6, prompt de conception parcours 1.B : "supporter plusieurs contextes de filtrage sans
+    changer de gabarit"). Attend une variable `pagination` (App\Shared\Pagination\PaginatedResult)
+    et, optionnellement, `paginationRouteParams` (paramètres de route à conserver d'une page à
+    l'autre, ex. le mot-clé ou le pays courant).
+#}
+{% set paginationRouteParams = paginationRouteParams|default({}) %}
+
+{% if pagination.items|length == 0 %}
+    <p class="empty-state">{{ 'article_list.empty'|trans }}</p>
+{% else %}
+    <div class="article-list">
+        {% for article in pagination.items %}
+            <article class="article-card">
+                {% if article.image %}
+                    <img src="{{ article.image }}" alt="" loading="lazy">
+                {% endif %}
+                <div>
+                    {% if article.feed and article.feed.sponsored %}
+                        <span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span>
+                    {% endif %}
+                    <h3><a href="{{ path('app_article_show', {id: article.id, slug: article.title|slugify}) }}">{{ article.title }}</a></h3>
+                    <div class="article-meta">
+                        {% if article.feed and article.feed.label %}{{ article.feed.label }} · {% endif %}
+                        {{ article.publicationDate|date('d/m/Y H:i') }}
+                    </div>
+                    {% if article.keywords|length > 0 %}
+                        <div class="keyword-tags">
+                            {% for keyword in article.keywords %}
+                                <a href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">#{{ keyword.label }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+
+    <nav class="pagination">
+        {% if pagination.hasPreviousPage %}
+            <a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(paginationRouteParams)|merge({page: pagination.page - 1})) }}">&larr; {{ 'pagination.previous'|trans }}</a>
+        {% else %}
+            <span class="disabled">&larr; {{ 'pagination.previous'|trans }}</span>
+        {% endif %}
+        <span>{{ 'pagination.page_of'|trans({'%page%': pagination.page, '%total%': pagination.getTotalPages}) }}</span>
+        {% if pagination.hasNextPage %}
+            <a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(paginationRouteParams)|merge({page: pagination.page + 1})) }}">{{ 'pagination.next'|trans }} &rarr;</a>
+        {% else %}
+            <span class="disabled">{{ 'pagination.next'|trans }} &rarr;</span>
+        {% endif %}
+    </nav>
+{% endif %}

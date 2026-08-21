@@ -1,0 +1,19 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'country_index.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'country_index.title'|trans }}</h1>
+
+    {% if countries|length == 0 %}
+        <p class="empty-state">{{ 'country_index.empty'|trans }}</p>
+    {% else %}
+        <div class="country-grid">
+            {% for country in countries %}
+                <a href="{{ path('app_country_show', {code: country.code}) }}">
+                    {{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

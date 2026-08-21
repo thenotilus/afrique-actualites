@@ -15,8 +15,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
  * accèdent au back-office. Ne pas confondre avec les abonnés de la newsletter
  * (NewsletterSubscriberCrudController), un modèle volontairement distinct (§3.7).
  *
- * Le mot de passe n'est volontairement pas éditable ici : la création de compte avec mot de
- * passe (inscription, réinitialisation) est un parcours public à part entière, prévu en phase 6.
+ * Le mot de passe n'est volontairement pas éditable ici : la création de compte avec mot de passe
+ * est un parcours public à part entière (`RegistrationController`, phase 6). La réinitialisation
+ * de mot de passe oublié n'est en revanche pas couverte par cette phase — reste à faire.
  *
  * @extends AbstractCrudController<User>
  */

@@ -1,0 +1,14 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'registration.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'registration.title'|trans }}</h1>
+    <p>{{ 'registration.intro'|trans }}</p>
+
+    {{ form_start(form, {attr: {class: 'stacked'}}) }}
+        {{ form_row(form.email) }}
+        {{ form_row(form.plainPassword) }}
+        <p><button type="submit">{{ 'registration.submit'|trans }}</button></p>
+    {{ form_end(form) }}
+{% endblock %}

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% if includeStaticPages %}
+    <url><loc>{{ url('app_home') }}</loc></url>
+    <url><loc>{{ url('app_country_index') }}</loc></url>
+    <url><loc>{{ url('app_user_news_index') }}</loc></url>
+    {% for country in countries %}
+    <url><loc>{{ url('app_country_show', {code: country.code}) }}</loc></url>
+    {% endfor %}
+    {% for userNews in userNewsList %}
+    <url><loc>{{ url('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}</loc></url>
+    {% endfor %}
+{% endif %}
+{% for article in articles %}
+    <url>
+        <loc>{{ url('app_article_show', {id: article.id, slug: article.title|slugify}) }}</loc>
+        <lastmod>{{ article.updatedAt|date('Y-m-d') }}</lastmod>
+    </url>
+{% endfor %}
+</urlset>

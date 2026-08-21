@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1a1a1a;
+            background: #f7f6f3;
+        }
+        a { color: #8a3324; }
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.75rem 1.25rem;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e2da;
+            flex-wrap: wrap;
+        }
+        .site-header .brand { font-weight: 700; font-size: 1.25rem; color: #1a1a1a; text-decoration: none; }
+        .site-header .tagline { font-size: 0.8rem; color: #6b6b6b; }
+        .site-nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
+        .site-nav a { text-decoration: none; }
+        .lang-switcher { display: flex; gap: 0.4rem; font-size: 0.85rem; }
+        .lang-switcher a { padding: 0.15rem 0.5rem; border: 1px solid #d8d4c8; border-radius: 4px; text-decoration: none; }
+        .lang-switcher a.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        main { max-width: 1080px; margin: 0 auto; padding: 1.25rem; }
+        .flash { padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1rem; }
+        .flash-success { background: #e4f3e6; color: #1e5e28; }
+        .flash-error { background: #fbe6e4; color: #8a2a20; }
+        .article-card { display: flex; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #e5e2da; }
+        .article-card img { width: 140px; height: 100px; object-fit: cover; border-radius: 6px; background: #e5e2da; flex-shrink: 0; }
+        .article-card h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+        .article-card h3 a { color: #1a1a1a; text-decoration: none; }
+        .article-meta { font-size: 0.8rem; color: #6b6b6b; margin-bottom: 0.35rem; }
+        .badge { display: inline-block; font-size: 0.72rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: #f0ede4; color: #4a4636; margin-right: 0.3rem; }
+        .badge-sponsored { background: #f4d35e; color: #4a3b00; }
+        .keyword-tags a { display: inline-block; font-size: 0.75rem; padding: 0.15rem 0.55rem; margin: 0 0.25rem 0.25rem 0; border-radius: 999px; background: #eee; color: #333; text-decoration: none; }
+        .pagination { display: flex; gap: 0.5rem; margin-top: 1.5rem; font-size: 0.9rem; }
+        .pagination a, .pagination span { padding: 0.3rem 0.7rem; border: 1px solid #d8d4c8; border-radius: 4px; text-decoration: none; color: #1a1a1a; }
+        .pagination .disabled { opacity: 0.4; }
+        .empty-state { padding: 2rem 0; color: #6b6b6b; }
+        form.inline { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        form.stacked label { display: block; margin: 0.75rem 0 0.25rem; font-size: 0.85rem; }
+        form.stacked input[type=text], form.stacked input[type=email], form.stacked input[type=password], form.stacked select, form.stacked textarea {
+            width: 100%; padding: 0.5rem; border: 1px solid #d8d4c8; border-radius: 4px;
+        }
+        button, .btn { display: inline-block; padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .btn-secondary { background: #fff; color: #1a1a1a; }
+        .country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+        .country-grid a { padding: 0.6rem; border: 1px solid #e5e2da; border-radius: 6px; text-decoration: none; color: #1a1a1a; background: #fff; }
+        .site-footer { border-top: 1px solid #e5e2da; margin-top: 2rem; padding: 1.5rem 1.25rem; background: #fff; font-size: 0.85rem; color: #6b6b6b; }
+    </style>
+    {% block public_stylesheets %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+    <header class="site-header">
+        <div>
+            <a class="brand" href="{{ path('app_home') }}">{{ 'app.site_name'|trans }}</a>
+            <div class="tagline">{{ 'app.tagline'|trans }}</div>
+        </div>
+        <nav class="site-nav">
+            <a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a>
+            <a href="{{ path('app_country_index') }}">{{ 'nav.countries'|trans }}</a>
+            <a href="{{ path('app_user_news_index') }}">{{ 'nav.user_news'|trans }}</a>
+            <a href="{{ path('app_search') }}">{{ 'nav.search'|trans }}</a>
+            {% if app.user %}
+                <a href="{{ path('app_my_user_news') }}">{{ 'nav.my_user_news'|trans }}</a>
+                <a href="{{ path('app_logout') }}">{{ 'nav.logout'|trans }}</a>
+            {% else %}
+                <a href="{{ path('app_login') }}">{{ 'nav.login'|trans }}</a>
+            {% endif %}
+        </nav>
+        <div class="lang-switcher">
+            {% for locale in ['fr', 'en'] %}
+                <a class="{{ app.request.locale == locale ? 'active' : '' }}"
+                   href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge({_locale: locale})) }}">
+                    {{ locale|upper }}
+                </a>
+            {% endfor %}
+        </div>
+    </header>
+
+    <main>
+        {% for label, messages in app.flashes(['success', 'error']) %}
+            {% for message in messages %}
+                <div class="flash flash-{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {% block public_body %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>{{ 'footer.newsletter_pitch'|trans }}</p>
+        <form class="inline" method="post" action="{{ path('app_newsletter_subscribe') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('newsletter_subscribe') }}">
+            <input type="email" name="email" placeholder="{{ 'footer.newsletter_email_placeholder'|trans }}" required>
+            <button type="submit">{{ 'footer.newsletter_submit'|trans }}</button>
+        </form>
+    </footer>
+{% endblock %}

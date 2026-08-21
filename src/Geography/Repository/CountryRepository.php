@@ -20,4 +20,10 @@ class CountryRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['code' => $code]);
     }
+
+    /** Annuaire des pays publics (§3.13, prompt de conception parcours 1.E). @return list<Country> */
+    public function findActive(): array
+    {
+        return $this->findBy(['active' => true], ['nameFr' => 'ASC']);
+    }
 }

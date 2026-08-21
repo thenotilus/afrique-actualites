@@ -1,0 +1,31 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ 'search.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ 'search.title'|trans }}</h1>
+
+    <form class="inline" method="get" action="{{ path('app_search') }}">
+        <input type="text" name="q" value="{{ query }}" placeholder="{{ 'search.placeholder'|trans }}" required>
+        <button type="submit">{{ 'search.submit'|trans }}</button>
+    </form>
+
+    {% if pagination is null %}
+        {% if query %}
+            <p class="empty-state">{{ 'search.too_short'|trans }}</p>
+        {% endif %}
+    {% elseif pagination.items|length == 0 %}
+        <p class="empty-state">{{ 'search.no_results'|trans({'%query%': query}) }}</p>
+        {% if trendingKeywords|length > 0 %}
+            <p>{{ 'search.try_keywords'|trans }}</p>
+            <div class="keyword-tags">
+                {% for keyword in trendingKeywords %}
+                    <a href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">#{{ keyword.label }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="article-meta">{{ 'search.results_count'|trans({'%count%': pagination.totalItems, '%query%': query}) }}</p>
+        {% include 'public/_article_list.html.twig' with {paginationRouteParams: {q: query}} %}
+    {% endif %}
+{% endblock %}

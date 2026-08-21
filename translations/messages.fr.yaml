@@ -4,3 +4,111 @@
 app:
     site_name: "Afrique Actualités"
     tagline: "Toute l'actualité de l'Afrique, en temps réel et par pays."
+
+nav:
+    home: "Accueil"
+    countries: "Pays"
+    user_news: "Unes"
+    search: "Recherche"
+    my_user_news: "Mes Unes"
+    login: "Connexion"
+    logout: "Déconnexion"
+
+footer:
+    newsletter_pitch: "Recevez chaque semaine l'essentiel de l'actualité africaine par email."
+    newsletter_email_placeholder: "Votre adresse email"
+    newsletter_submit: "S'abonner"
+
+pagination:
+    previous: "Précédent"
+    next: "Suivant"
+    page_of: "Page %page% sur %total%"
+
+article_list:
+    empty: "Aucun article pour le moment."
+    sponsored: "Sponsorisé"
+    count: "%count% article(s)"
+
+article_show:
+    read_original: "Lire l'article original"
+    similar: "À lire aussi"
+    related_countries: "Concerne :"
+
+home:
+    latest_articles: "Derniers articles"
+
+country_index:
+    title: "Actualité par pays"
+    empty: "Aucun pays actif pour le moment."
+
+country_show:
+    filtered_by: "Filtré par le mot-clé « %keyword% »."
+    clear_filter: "Retirer le filtre"
+
+search:
+    title: "Recherche"
+    placeholder: "Rechercher un article, un mot-clé..."
+    submit: "Rechercher"
+    too_short: "Saisissez au moins deux caractères."
+    no_results: "Aucun résultat pour « %query% »."
+    try_keywords: "Essayez plutôt un de ces mots-clés :"
+    results_count: "%count% résultat(s) pour « %query% »"
+
+user_news_index:
+    title: "Les Unes"
+    empty: "Aucune Une publique pour le moment."
+
+my_user_news:
+    title: "Mes Unes"
+    new: "Créer une Une"
+    empty: "Vous n'avez pas encore créé de Une."
+    column_label: "Nom"
+    column_visibility: "Visibilité"
+    column_actions: "Actions"
+    private: "Privée"
+    public: "Publique"
+    edit: "Éditer"
+    duplicate: "Dupliquer"
+    delete: "Supprimer"
+    confirm_delete: "Supprimer cette Une ?"
+
+user_news_form:
+    title_new: "Créer une Une"
+    title_edit: "Éditer la Une"
+    submit: "Enregistrer"
+
+user_news:
+    form:
+        label: "Nom de la Une"
+        taxonomies: "Mots-clés"
+        private: "Une privée (réservé aux administrateurs)"
+    flash:
+        created: "La Une a été créée."
+        updated: "La Une a été mise à jour."
+        duplicated: "La Une a été dupliquée."
+        deleted: "La Une a été supprimée."
+
+login:
+    title: "Connexion"
+    intro: "Connectez-vous pour créer et gérer vos Unes personnalisées."
+    email: "Email"
+    password: "Mot de passe"
+    submit: "Se connecter"
+    no_account: "Pas encore de compte ?"
+    register_link: "Inscrivez-vous"
+
+registration:
+    title: "Inscription"
+    intro: "L'inscription est facultative : elle n'est utile que pour créer des Unes personnalisées."
+    submit: "S'inscrire"
+    form:
+        email: "Email"
+        password: "Mot de passe"
+        email_already_used: "Un compte existe déjà avec cet email."
+    flash:
+        success: "Votre compte a été créé, vous pouvez vous connecter."
+
+newsletter:
+    flash:
+        subscribed: "Merci, votre inscription à la newsletter est confirmée."
+        invalid: "Adresse email invalide."

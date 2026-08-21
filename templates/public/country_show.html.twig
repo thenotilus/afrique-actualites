@@ -1,0 +1,29 @@
+{% extends 'public/base.html.twig' %}
+
+{% set countryName = app.request.locale == 'en' ? country.nameEn : country.nameFr %}
+
+{% block title %}{{ countryName }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ countryName }}</h1>
+
+    {% if keyword %}
+        <p>
+            {{ 'country_show.filtered_by'|trans({'%keyword%': keyword.label}) }}
+            <a href="{{ path('app_country_show', {code: country.code}) }}">{{ 'country_show.clear_filter'|trans }}</a>
+        </p>
+    {% endif %}
+
+    {% if availableKeywords|length > 0 %}
+        <div class="keyword-tags">
+            {% for available in availableKeywords %}
+                <a href="{{ path('app_country_by_keyword', {code: country.code, label: available.label}) }}"
+                   class="{{ keyword and keyword.id == available.id ? 'active' : '' }}">
+                    #{{ available.label }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% include 'public/_article_list.html.twig' %}
+{% endblock %}

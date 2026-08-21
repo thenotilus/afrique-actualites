@@ -55,7 +55,7 @@ le plan détaillé dans la documentation fonctionnelle.
       manuellement (Unes, newsletters)
 - [x] Test de fumée bout en bout sur les 9 écrans + le circuit de validation
       (`tests/Controller/Admin/AdminBackofficeTest.php`)
-- [ ] Formulaire de connexion public (prévu en phase 6 avec le reste des pages publiques)
+- [x] Formulaire de connexion public (livré en phase 6, voir ci-dessous)
 
 **Phase 4 — Moteur de classification bilingue** :
 
@@ -92,8 +92,29 @@ le plan détaillé dans la documentation fonctionnelle.
 - [ ] Transport Messenger asynchrone réel (reste en `sync` — aucun worker d'extraction RSS
       continu n'existe encore pour dispatcher les messages en conditions réelles, voir §6)
 
-Les phases suivantes (pages publiques...) sont détaillées dans le tableau de phasage (§11.2 de la
-documentation fonctionnelle).
+**Phase 6 — Pages publiques (bilingues FR/EN)** :
+
+- [x] Accueil, listes par flux/mot-clé, recherche (titre/description/mot-clé validé), fiche
+      article avec suggestions "à lire aussi" — un seul gabarit de liste partagé par tous les
+      contextes (`public/_article_list.html.twig`)
+- [x] Page pays (§3.13, écran prioritaire) : croisement optionnel par mot-clé validé, archives
+      paginées sans limite de temps
+- [x] "Unes" : annuaire public, page dédiée, gestion complète par l'utilisateur connecté
+      (créer/éditer/dupliquer/supprimer), visibilité privée réservée aux administrateurs
+- [x] Connexion/inscription (email + mot de passe, `form_login` natif Symfony) — l'inscription
+      reste facultative, réservée à la création de "Unes" personnalisées
+- [x] Capture d'email pour la newsletter hebdomadaire (encart pied de page sur tout le site)
+- [x] Sitemap-index + sous-sitemaps par langue, découpés par lots de 5000 articles
+      (`src/Sitemap/`, `src/Controller/SitemapController.php`)
+- [x] Sélecteur de langue persistant, pagination générique (`App\Shared\Pagination`)
+- [x] Test de fumée bout en bout : rendu de chaque page (FR/EN), connexion/inscription réelles,
+      cycle de vie complet d'une "Une" (`tests/Controller/PublicPagesTest.php`)
+- [ ] Réinitialisation de mot de passe oublié
+- [ ] Mot-clé optionnel dans le croisement pays × mot-clé et profondeur des archives : réponses
+      par défaut retenues faute de réponse du porteur produit (§12.2 point 1)
+
+Les phases suivantes (newsletter hebdomadaire, double-run & bascule...) sont détaillées dans le
+tableau de phasage (§11.2 de la documentation fonctionnelle).
 
 ## Démarrage local
 

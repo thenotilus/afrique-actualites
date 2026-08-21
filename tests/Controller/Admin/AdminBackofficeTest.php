@@ -75,10 +75,10 @@ final class AdminBackofficeTest extends WebTestCase
 
         $client->request('GET', '/admin');
 
-        // Le formulaire de connexion public (avec redirection vers /login) est prévu en phase 6
-        // (§11.2) avec le reste des pages publiques ; en son absence, Symfony renvoie 401 plutôt
-        // que de rediriger vers un point d'entrée d'authentification qui n'existe pas encore.
-        self::assertResponseStatusCodeSame(401);
+        // Le formulaire de connexion public existe depuis la phase 6 (§11.2) : un visiteur
+        // anonyme est redirigé vers lui plutôt que de recevoir un 401 brut (comportement de la
+        // phase 3, tant qu'aucun point d'entrée d'authentification n'existait encore).
+        self::assertResponseRedirects('/fr/connexion');
     }
 
     #[DataProvider('crudControllerProvider')]

@@ -1,0 +1,18 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ (isNew ? 'user_news_form.title_new' : 'user_news_form.title_edit')|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block public_body %}
+    <h1>{{ (isNew ? 'user_news_form.title_new' : 'user_news_form.title_edit')|trans }}</h1>
+
+    {{ form_start(form, {attr: {class: 'stacked'}}) }}
+        {{ form_row(form.label) }}
+        {{ form_row(form.taxonomies) }}
+        {% if is_granted('ROLE_ADMIN') %}
+            {{ form_row(form.private) }}
+        {% else %}
+            {{ form_widget(form.private, {attr: {style: 'display:none'}}) }}
+        {% endif %}
+        <p><button type="submit">{{ 'user_news_form.submit'|trans }}</button></p>
+    {{ form_end(form) }}
+{% endblock %}
