@@ -14,6 +14,8 @@ le plan détaillé dans la documentation fonctionnelle.
   9 phases (§11). Toute décision d'architecture ou de périmètre découle de ce document.
 - [`docs/architecture.md`](docs/architecture.md) — conventions de code de ce dépôt (organisation
   par domaine, internationalisation, traitements continus).
+- [`docs/prompt-claude-design.md`](docs/prompt-claude-design.md) — prompt prêt à l'emploi pour
+  concevoir l'UX/UI du site public et du back-office dans Claude Design.
 
 ## État d'avancement
 
