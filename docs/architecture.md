@@ -59,20 +59,67 @@ mise en place effective des workers/handlers dédiés est prévue en phase 4/5 d
 Un verrou d'exécution (`symfony/lock`, `config/packages/lock.yaml`) doit être utilisé par ces
 workers pour éviter tout chevauchement (§8, point 12 de la documentation fonctionnelle). Le store
 de lock par défaut (`flock`, local au disque) devra être remplacé par un store partagé (ex. Redis,
-déjà présent dans `docker-compose.yml`) avant la mise en production, si plusieurs instances du
-worker tournent en parallèle.
+déjà présent dans `compose.yaml`) avant la mise en production, si plusieurs instances du worker
+tournent en parallèle.
 
 ## Back-office
 
 Back-office **unique** sous EasyAdminBundle (§3.12), à construire en phase 3 du plan de refonte.
 Aucun autre système d'administration (Sonata, contrôleur "maison") n'est repris.
 
+## Modèle de données (phase 2)
+
+Les entités vivent sous `src/<Domaine>/Entity/` (voir liste ci-dessus). Points de conception à
+connaître :
+
+- **`Taxonomy`** porte un statut (`App\Taxonomy\Enum\TaxonomyStatus` : `SUGGESTED` par défaut à la
+  création, `VALIDATED`, `REJECTED`, `ARCHIVED`) et une langue (`App\Shared\ValueObject\Language`).
+  Une même chaîne peut donc exister comme deux taxonomies distinctes selon la langue.
+- **`Article::addKeyword()`** et **`UserNews::addTaxonomy()`** lèvent une `\LogicException` si on
+  tente d'y rattacher une taxonomie qui n'est pas `VALIDATED` — c'est la garde-fou de code qui
+  traduit le jalon critique du plan de refonte (§11.3) : un mot-clé "suggéré" ne doit jamais fuiter
+  côté public. Voir `tests/Entity/EntityGraphTest.php` pour la démonstration.
+- **`Article ↔ Country`** est une relation `ManyToMany` native (table `article_country`), en
+  remplacement du détour par `UserNews` de l'ancienne application (§3.13). Elle est destinée à être
+  alimentée par la reconnaissance d'entités nommées du futur pipeline de classification (§10.1.6),
+  pas seulement à la main.
+- **`NewsletterSubscriber`** (domaine `Newsletter`) est un modèle **distinct** de `User` : le site
+  ne requiert pas d'inscription, et les ~40 destinataires actuels de la newsletter hebdomadaire ne
+  sont pas nécessairement des comptes utilisateur (§3.7). C'est la réponse par défaut retenue tant
+  que la question posée en §12.2 (point 2) n'est pas tranchée par le porteur produit ; si la
+  réponse va dans l'autre sens, cette entité sera fusionnée avec `User`.
+- **`User`** implémente directement `UserInterface`/`PasswordAuthenticatedUserInterface` du
+  composant Security natif de Symfony, en remplacement de FOSUserBundle (§9.1).
+- L'ancienne entité `Cache` (cache applicatif maison, table SQL) **n'est pas reprise** : la cible
+  est le composant Cache standard de Symfony (PSR-6), configuré dans
+  `config/packages/cache.yaml`, avec un adaptateur Redis en production (§9.1, §8 point 8).
+
+### Migration Doctrine — action requise avant la phase 3
+
+Le mapping des 9 entités a été validé (`doctrine:mapping:info`, `doctrine:schema:validate`) et
+testé fonctionnellement (`tests/Entity/EntityGraphTest.php`) via une base **SQLite locale**, le
+démon Docker n'étant pas démarrable dans l'environnement d'amorçage (permissions du bac à sable).
+**Aucune migration Doctrine n'a donc encore été générée** : une migration produite depuis SQLite
+serait dans le mauvais dialecte SQL pour la cible MySQL. Dès qu'une base MySQL est joignable
+(`docker compose up -d database` sur une machine où Docker fonctionne, ou toute autre instance
+MySQL 8) :
+
+```
+php bin/console doctrine:migrations:diff
+php bin/console doctrine:migrations:migrate
+```
+
 ## État d'avancement
 
-Ce dépôt correspond à la **phase 1 (socle technique)** du plan de refonte détaillé en §11.2 de la
-documentation fonctionnelle : squelette Symfony 6.4 LTS, structure de dossiers par domaine,
-fondations i18n, CI. Les entités, le pipeline de classification, le back-office et les pages
-publiques sont des phases ultérieures (voir le tableau de phasage en §11.2).
+- **Phase 1 (socle technique)** : squelette Symfony 6.4 LTS, structure de dossiers par domaine,
+  fondations i18n, CI — terminée.
+- **Phase 2 (modèle de données cible)** : 9 entités écrites et validées (mapping + tests
+  fonctionnels). Reste à faire avant la phase 3 : générer la migration Doctrine contre une vraie
+  base MySQL (voir ci-dessus) et écrire le script d'import des données de l'ancien dépôt
+  `thenotilus/afkr` (mots-clés existants repris comme pré-validés, §11.4).
+
+Le back-office, le pipeline de classification et les pages publiques sont des phases ultérieures
+(voir le tableau de phasage en §11.2 de la documentation fonctionnelle).
 
 ## Suivi des dépendances de développement
 

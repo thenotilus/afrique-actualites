@@ -28,8 +28,21 @@ le plan détaillé dans la documentation fonctionnelle.
 - [x] Intégration continue (lint, PHPStan, PHP-CS-Fixer, PHPUnit)
 - [ ] `phpstan/phpstan` à ajouter en dev (voir note dans `docs/architecture.md`)
 
-Les phases suivantes (modèle de données, back-office, moteur de classification, crawling, pages
-publiques...) sont détaillées dans le tableau de phasage (§11.2 de la documentation fonctionnelle).
+**Phase 2 — Modèle de données cible** :
+
+- [x] 9 entités écrites (`Feed`, `Article`, `Taxonomy`, `Country`, `UserNews`, `Publication`,
+      `User`, `NewsletterSubscriber`, `WeeklyNewsletter`) — mapping validé, voir
+      `docs/architecture.md` pour les décisions de conception
+- [x] `Taxonomy` à statut (`SUGGESTED`/`VALIDATED`/`REJECTED`/`ARCHIVED`) et rattachée à une langue
+- [x] Relation native `Article ↔ Country`
+- [x] Sécurité applicative dans le code : impossible d'attacher une taxonomie non validée comme
+      mot-clé ou à une "Une" (`\LogicException`, testé dans `tests/Entity/EntityGraphTest.php`)
+- [ ] Migration Doctrine contre une vraie base MySQL (bloqué dans cet environnement, voir
+      `docs/architecture.md` — action à faire dès qu'une base est joignable)
+- [ ] Script d'import des données de l'ancien dépôt `thenotilus/afkr`
+
+Les phases suivantes (back-office, moteur de classification, crawling, pages publiques...) sont
+détaillées dans le tableau de phasage (§11.2 de la documentation fonctionnelle).
 
 ## Démarrage local
 
@@ -41,6 +54,8 @@ composer install
 composer require --dev phpstan/phpstan phpstan/phpstan-symfony   # cf. docs/architecture.md
 cp .env .env.local   # puis ajuster DATABASE_URL si besoin
 php bin/console doctrine:database:create
+php bin/console doctrine:migrations:diff     # tant qu'aucune migration n'existe encore, voir docs/architecture.md
+php bin/console doctrine:migrations:migrate
 symfony server:start   # ou: php -S 127.0.0.1:8000 -t public
 ```
 

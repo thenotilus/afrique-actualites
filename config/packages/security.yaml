@@ -2,19 +2,23 @@ security:
     # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    # Remplace FOSUserBundle (abandonné, §9.1) par le provider entité natif sur App\User\Entity\User.
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\User\Entity\User
+                property: email
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#the-firewall
+            # L'authentification (formulaire + connexion sociale Facebook) est mise en place en
+            # phase 3/6 du plan de refonte, avec le back-office et les pages publiques — voir
+            # docs/documentation-fonctionnelle.md §11.2.
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
@@ -22,8 +26,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:
     security:
