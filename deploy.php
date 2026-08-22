@@ -61,7 +61,7 @@ add('writable_dirs', ['var/sessions', 'var/log', 'var/cache']);
 // --optimize-autoloader : autoloader de classe optimisé (classmap).
 // Les scripts Flex (`cache:clear`, `assets:install`) restent actifs (pas de --no-scripts),
 // donc le cache prod est chauffé et `public/bundles/` généré pendant `composer install`.
-set('composer_options', 'install --verbose --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader');
+set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader');
 
 // ─── Cible(s) de déploiement ────────────────────────────────────────────────
 // Renseignez les placeholders {{À_COMPLÉTER}}. Dupliquez ce bloc pour un environnement
