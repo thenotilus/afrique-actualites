@@ -1,0 +1,8 @@
+parameters:
+    # User-agent de récupération des flux (§6). S'identifie explicitement comme le bot d'Afrique
+    # Actualités, dans le même esprit que les profils de crawl (§9.4, config/packages/crawler.yaml) :
+    # jamais d'usurpation d'un navigateur pour contourner un blocage (§11.4).
+    feed.user_agent: 'AfriqueActualitesBot/1.0 (Feed Reader; +https://www.afrique-actualites.com/a-propos/bot; crawl@afrique-actualites.com)'
+
+    # Délai d'attente (secondes) de la requête HTTP de récupération d'un flux.
+    feed.request_timeout: 10.0

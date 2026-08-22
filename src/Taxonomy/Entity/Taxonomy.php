@@ -120,6 +120,21 @@ class Taxonomy
         return $this;
     }
 
+    /**
+     * Validation « système » sans administrateur : les taxonomies fraîchement détectées par le
+     * pipeline de classification sont validées par défaut (décision produit). `validatedBy` reste
+     * nul — c'est justement ce qui distingue une validation automatique d'une validation manuelle
+     * dans l'écran de modération, où un administrateur peut toujours rejeter le terme a posteriori.
+     */
+    public function validateAutomatically(): static
+    {
+        $this->status = TaxonomyStatus::VALIDATED;
+        $this->validatedAt = new \DateTimeImmutable();
+        $this->touchUpdatedAt();
+
+        return $this;
+    }
+
     public function reject(User $admin): static
     {
         $this->status = TaxonomyStatus::REJECTED;

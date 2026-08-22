@@ -52,6 +52,10 @@ services:
             $minDocumentFrequency: '%classification.min_document_frequency%'
             $maxDocumentFrequencyRatio: '%classification.max_document_frequency_ratio%'
 
+    App\Classification\Command\RunClassificationCommand:
+        arguments:
+            $defaultWindowHours: '%classification.window_hours%'
+
     # Crawling multi-bots (§9.4) : une seule implémentation d'extraction de métadonnées à ce
     # stade, derrière une interface pour rester remplaçable (ex. un extracteur dédié pour un site
     # aux balises non standard) sans toucher à l'orchestration.
@@ -65,3 +69,9 @@ services:
         arguments:
             $crawlerCache: '@cache.crawler'
             $cacheTtlSeconds: '%crawler.cache_ttl%'
+
+    # Récupération des articles (§6) : lecture des flux RSS/Atom actifs et création des articles.
+    App\Feed\FeedIngester:
+        arguments:
+            $userAgent: '%feed.user_agent%'
+            $requestTimeout: '%feed.request_timeout%'

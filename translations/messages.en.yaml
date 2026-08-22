@@ -13,11 +13,23 @@ nav:
     my_user_news: "My news lists"
     login: "Log in"
     logout: "Log out"
+    menu: "Menu"
+    language: "Language"
+
+action:
+    close: "Close"
+    back: "Back"
+    filter: "Filter"
 
 footer:
+    tagline: "pan-African aggregator"
     newsletter_pitch: "Get the essential African news in your inbox every week."
     newsletter_email_placeholder: "Your email address"
     newsletter_submit: "Subscribe"
+
+contact_block:
+    headline: "A tip, a comment, a correction?"
+    pitch: "Write to our editorial team. We read every message."
 
 pagination:
     previous: "Previous"
@@ -33,30 +45,52 @@ article_show:
     read_original: "Read the original article"
     similar: "You may also like"
     related_countries: "About:"
+    breadcrumb_current: "Article"
+    read_original_on: "Read the original article on"
+    share: "Share"
+    article_keywords: "Article keywords"
+    see_country: "View the country page"
 
 home:
     latest_articles: "Latest articles"
 
+article_list_by_keyword:
+    eyebrow: "Keyword"
+
+article_list_by_feed:
+    eyebrow: "Source"
+
 country_index:
     title: "News by country"
+    eyebrow: "News by country"
     empty: "No active country yet."
 
 country_show:
     filtered_by: "Filtered by keyword \"%keyword%\"."
     clear_filter: "Clear filter"
+    cross_with: "Cross with"
+    all: "All"
+    recent: "Recent"
+    archives: "Archives"
+    all_archives: "All archives"
 
 search:
     title: "Search"
-    placeholder: "Search an article, a keyword..."
+    prompt: "Search"
+    placeholder: "Search a topic…"
     submit: "Search"
     too_short: "Type at least two characters."
     no_results: "No results for \"%query%\"."
-    try_keywords: "Try one of these keywords instead:"
+    try_keywords: "Try a broader keyword, or one of today's:"
     results_count: "%count% result(s) for \"%query%\""
+    results: "Results"
+    results_count_short: "%count% article(s)"
 
 user_news_index:
-    title: "News lists"
+    title: "Public news lists"
+    intro: "Themed selections built by readers: a set of keywords, a permanent feed. Create yours in two minutes."
     empty: "No public news list yet."
+    keywords_count: "%count% keyword(s)"
 
 my_user_news:
     title: "My news lists"
@@ -76,6 +110,8 @@ user_news_form:
     title_new: "Create a news list"
     title_edit: "Edit the news list"
     submit: "Save"
+    cancel: "Cancel"
+    keywords_hint: "Only keywords validated by the editorial team are offered."
 
 user_news:
     form:
@@ -96,11 +132,19 @@ login:
     submit: "Log in"
     no_account: "No account yet?"
     register_link: "Sign up"
+    back_to_site: "Back to site"
+    aside_eyebrow: "What an account is for"
+    aside_title: "Reading requires no account."
+    aside_body: "The account is only for creating and finding your \"news lists\" — your keyword watchlists."
+    aside_point_1: "Create news lists, public or private"
+    aside_point_2: "Find them on all your devices"
+    aside_newsletter: "A question? Write to our editorial team: contact@afrique-actualites.com"
 
 registration:
     title: "Sign up"
     intro: "Registration is optional: it is only needed to create personalized news lists."
     submit: "Sign up"
+    have_account: "Already have an account?"
     form:
         email: "Email"
         password: "Password"

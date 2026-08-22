@@ -1,0 +1,145 @@
+# Environnement de développement complet et autonome pour afrique-actualites.
+#
+# À lancer depuis ce dossier :   docker compose up -d --build
+# (voir .dev/README.md pour la configuration de .env.local et les commandes utiles)
+#
+# Alternative au compose.yaml racine (qui ne fournit que MySQL et suppose
+# `symfony server:start` en local) : ici tout tourne dans Docker, y compris PHP-FPM et Nginx.
+
+name: afrique-actualites
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: afkr_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ../:/var/www/app:cached
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      php:
+        condition: service_started
+    networks:
+      - afrique_net
+
+  php:
+    build:
+      context: ./php
+    container_name: afkr_php
+    restart: unless-stopped
+    working_dir: /var/www/app
+    volumes:
+      - ../:/var/www/app:cached
+      - ./php/php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - afrique_net
+
+  database:
+    image: mysql:8.0
+    container_name: afkr_database
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: afkr
+      MYSQL_USER: afkr
+      MYSQL_PASSWORD: afkr
+      MYSQL_ROOT_PASSWORD: root
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - database_data:/var/lib/mysql
+    networks:
+      - afrique_net
+
+  # Interface web de la base — http://localhost:8081 (serveur : database, user : app)
+  adminer:
+    image: adminer:4
+    container_name: afkr_adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    depends_on:
+      - database
+    networks:
+      - afrique_net
+
+  # SMTP de capture pour la newsletter / e-mails transactionnels — UI : http://localhost:8025
+  # Brancher MAILER_DSN=smtp://mailer:1025 dans .env.local
+  mailer:
+    image: axllent/mailpit
+    container_name: afkr_mailer
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - afrique_net
+
+  # --- Worker d'extraction / classification continu (§6, "Traitements continus") ---
+  # Consomme le transport Doctrine `async` (config/packages/messenger.yaml), où est routé
+  # CrawlArticleMetaMessage. `--time-limit=3600` fait sortir le worker toutes les heures ;
+  # `restart: unless-stopped` le relance aussitôt : c'est le motif recommandé par Symfony pour
+  # repartir sur un process neuf et éviter les fuites mémoire d'un worker de longue durée.
+  # Prérequis : la table `messenger_messages` doit exister (DSN en `auto_setup=0`) — elle est
+  # créée par les migrations ou par `docker compose exec php php bin/console messenger:setup-transports`.
+  messenger:
+    build:
+      context: ./php
+    container_name: afkr_messenger
+    restart: unless-stopped
+    working_dir: /var/www/app
+    volumes:
+      - ../:/var/www/app:cached
+      - ./php/php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    command: [ "sh", "-c", "while true; do php bin/console messenger:consume async -vv --time-limit=300; sleep 300; done" ]
+    networks:
+      - afrique_net
+
+  # --- Planificateur d'ingestion et de classification (§6, "Traitements continus") ---
+  # C'est ce service qui « va chercher » les nouveaux articles : il lance `app:feed:ingest`
+  # (lecture des flux RSS/Atom actifs, création des articles manquants) et la classification
+  # `app:classification:run` toutes les 5 minutes.
+  # Boucle shell plutôt que cron : le process hérite ainsi de l'environnement du conteneur
+  # et du .env.local monté (DATABASE_URL, etc.), sans paquet supplémentaire.
+  # L'ingestion met en file les crawls de repli que le service `messenger` consomme ensuite.
+  # `restart: unless-stopped` relance la boucle si elle s'interrompt.
+  scheduler:
+    build:
+      context: ./php
+    container_name: afkr_scheduler
+    restart: unless-stopped
+    working_dir: /var/www/app
+    volumes:
+      - ../:/var/www/app:cached
+      - ./php/php.ini:/usr/local/etc/php/conf.d/zz-custom.ini:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    command: ["sh", "-c", "while true; do php bin/console app:feed:ingest --no-interaction; php bin/console app:classification:run --no-interaction; sleep 300; done"]
+    networks:
+      - afrique_net
+
+volumes:
+  database_data:
+
+networks:
+  afrique_net:
+    driver: bridge

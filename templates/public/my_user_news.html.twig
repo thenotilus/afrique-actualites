@@ -3,39 +3,37 @@
 {% block title %}{{ 'my_user_news.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'my_user_news.title'|trans }}</h1>
-    <p><a class="btn" href="{{ path('app_user_news_new') }}">{{ 'my_user_news.new'|trans }}</a></p>
+    <section class="section">
+        <div class="section-head">
+            <span class="section-title" style="font-size:32px">{{ 'my_user_news.title'|trans }}</span>
+            <a class="btn btn-accent" href="{{ path('app_user_news_new') }}">+ {{ 'my_user_news.new'|trans }}</a>
+        </div>
 
-    {% if userNewsList|length == 0 %}
-        <p class="empty-state">{{ 'my_user_news.empty'|trans }}</p>
-    {% else %}
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead>
-                <tr style="text-align: left; border-bottom: 1px solid #e5e2da;">
-                    <th>{{ 'my_user_news.column_label'|trans }}</th>
-                    <th>{{ 'my_user_news.column_visibility'|trans }}</th>
-                    <th>{{ 'my_user_news.column_actions'|trans }}</th>
-                </tr>
-            </thead>
-            <tbody>
+        {% if userNewsList|length == 0 %}
+            <p class="empty-state">{{ 'my_user_news.empty'|trans }}</p>
+        {% else %}
+            <div class="card-grid cols-3">
                 {% for userNews in userNewsList %}
-                    <tr style="border-bottom: 1px solid #f0ede4;">
-                        <td><a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a></td>
-                        <td>{{ userNews.private ? 'my_user_news.private'|trans : 'my_user_news.public'|trans }}</td>
-                        <td>
-                            <a href="{{ path('app_user_news_edit', {id: userNews.id}) }}">{{ 'my_user_news.edit'|trans }}</a>
-                            <form class="inline" method="post" action="{{ path('app_user_news_duplicate', {id: userNews.id}) }}" style="display: inline;">
+                    <div class="une-card">
+                        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px">
+                            <div class="une-card__title"><a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a></div>
+                            <span class="visibility {{ userNews.private ? 'visibility--private' : 'visibility--public' }}">{{ userNews.private ? 'my_user_news.private'|trans : 'my_user_news.public'|trans }}</span>
+                        </div>
+                        <div class="une-card__foot" style="border:0; padding:0">{{ 'user_news_index.keywords_count'|trans({'%count%': userNews.taxonomies|length}) }}</div>
+                        <div class="une-card__actions">
+                            <a class="btn btn-secondary btn-sm" href="{{ path('app_user_news_edit', {id: userNews.id}) }}">{{ 'my_user_news.edit'|trans }}</a>
+                            <form method="post" action="{{ path('app_user_news_duplicate', {id: userNews.id}) }}">
                                 <input type="hidden" name="_token" value="{{ csrf_token('user_news_duplicate_' ~ userNews.id) }}">
-                                <button type="submit" class="btn-secondary">{{ 'my_user_news.duplicate'|trans }}</button>
+                                <button type="submit" class="btn btn-secondary btn-sm">{{ 'my_user_news.duplicate'|trans }}</button>
                             </form>
-                            <form class="inline" method="post" action="{{ path('app_user_news_delete', {id: userNews.id}) }}" style="display: inline;" onsubmit="return confirm('{{ 'my_user_news.confirm_delete'|trans }}')">
+                            <form method="post" class="push-end" action="{{ path('app_user_news_delete', {id: userNews.id}) }}" onsubmit="return confirm('{{ 'my_user_news.confirm_delete'|trans }}')">
                                 <input type="hidden" name="_token" value="{{ csrf_token('user_news_delete_' ~ userNews.id) }}">
-                                <button type="submit" class="btn-secondary">{{ 'my_user_news.delete'|trans }}</button>
+                                <button type="submit" class="btn btn-danger btn-sm">{{ 'my_user_news.delete'|trans }}</button>
                             </form>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+            </div>
+        {% endif %}
+    </section>
 {% endblock %}

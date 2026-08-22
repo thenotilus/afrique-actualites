@@ -3,6 +3,20 @@
 {% block title %}{{ userNews.label }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ userNews.label }}</h1>
+    <div class="page-hero">
+        <div>
+            <div class="page-hero__eyebrow">{{ 'user_news_index.title'|trans }}</div>
+            <h1 class="page-hero__title">{{ userNews.label }}</h1>
+            {% if userNews.taxonomies|length > 0 %}
+                <div class="tags" style="margin-top:12px">
+                    {% for taxonomy in userNews.taxonomies %}
+                        <a class="tag tag--outline" style="background:var(--green); border-color:var(--green-border); color:var(--surface)" href="{{ path('app_article_by_keyword', {label: taxonomy.label}) }}">{{ taxonomy.label }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="page-hero__meta">{{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</div>
+        </div>
+    </div>
+
     {% include 'public/_article_list.html.twig' %}
 {% endblock %}

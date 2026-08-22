@@ -7,3 +7,9 @@ parameters:
     # Au-delà de cette proportion du lot, un token est probablement un mot commun ayant échappé
     # au filtrage de mots vides plutôt qu'un sujet d'actualité, et n'est pas retenu (§4.3 L6).
     classification.max_document_frequency_ratio: 0.6
+    # Largeur (en heures) de la fenêtre glissante analysée par `app:classification:run` (§6). La
+    # classification est découplée de l'ingestion : au lieu de scorer le seul lot d'un flux (où un
+    # article au sujet unique restait sans terme, faute d'atteindre `min_document_frequency`), on
+    # rescore périodiquement tous les articles ingérés dans cette fenêtre. Plus large = lot plus
+    # fourni, donc plus de chances qu'un token récidive et devienne mot-clé.
+    classification.window_hours: 6

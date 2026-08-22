@@ -1,0 +1,23 @@
+{#
+    Encart invitant à contacter l'équipe éditoriale (remplace l'ancien encart
+    d'inscription à la newsletter). Réutilisé en pleine largeur (accueil, fin
+    d'article) et en version compacte (colonnes latérales des listes).
+
+    Variable optionnelle `variant` : 'full' (défaut) ou 'compact'.
+#}
+{% set variant = variant|default('full') %}
+{% set contact_email = 'contact@afrique-actualites.com' %}
+{% if variant == 'compact' %}
+    <section class="newsletter newsletter--compact">
+        <div class="newsletter__title">{{ 'contact_block.headline'|trans }}</div>
+        <a class="newsletter__cta" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    </section>
+{% else %}
+    <section class="newsletter">
+        <div>
+            <div class="newsletter__title">{{ 'contact_block.headline'|trans }}</div>
+            <div class="newsletter__pitch">{{ 'contact_block.pitch'|trans }}</div>
+        </div>
+        <a class="newsletter__cta" href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+    </section>
+{% endif %}

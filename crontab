@@ -1,0 +1,12 @@
+# Crontab pour Afrique Actualités
+# À mettre en place sur le serveur de production.
+# Ces tâches assurent l'ingestion des flux, la classification des articles et le traitement des messages asynchrones.
+
+# Ingestion des flux RSS/Atom et classification automatique (toutes les 5 minutes)
+*/5 * * * * cd {{deploy_path}}/current && flock -n var/cron-ingest.lock php bin/console app:feed:ingest --no-interaction >> var/log/ingest.cron.log 2>&1
+*/5 * * * * cd {{deploy_path}}/current && flock -n var/cron-classify.lock php bin/console app:classification:run --no-interaction >> var/log/classify.cron.log 2>&1
+
+# Worker Messenger : consomme la file `async` (crawls de repli).
+# Le worker s'arrête toutes les 5 minutes (--time-limit=300) pour éviter les fuites mémoire,
+# et le cron le relance immédiatement.
+*/5 * * * * cd {{deploy_path}}/current && flock -n var/cron-messenger.lock php bin/console messenger:consume async --time-limit=300 --no-interaction >> var/log/messenger.cron.log 2>&1

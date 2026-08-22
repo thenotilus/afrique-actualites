@@ -20,13 +20,6 @@ services:
       # - ./docker/db/data:/var/lib/mysql:rw
 ###< doctrine/doctrine-bundle ###
 
-###> afkr/lock-cache ###
-  # Store cible pour symfony/lock (workers continus) et le cache PSR-6 — voir §9.1 et
-  # docs/architecture.md. Optionnel en développement (le store `flock` par défaut suffit).
-  redis:
-    image: redis:7-alpine
-###< afkr/lock-cache ###
-
 volumes:
 ###> doctrine/doctrine-bundle ###
   database_data:

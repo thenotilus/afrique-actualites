@@ -1,56 +1,95 @@
 {% extends 'public/base.html.twig' %}
+{% import 'public/_macros.html.twig' as m %}
 
 {% block title %}{{ article.title }} — {{ 'app.site_name'|trans }}{% endblock %}
 
+{% block mobile_title %}{{ article.feed and article.feed.label ? article.feed.label : 'article_show.breadcrumb_current'|trans }}{% endblock %}
+{% block mobile_context_action %}
+    <a class="header-icon-btn" data-share href="{{ article.url }}" rel="nofollow noopener" target="_blank"
+       data-share-url="{{ article.url }}" data-share-title="{{ article.title }}" aria-label="{{ 'article_show.share'|trans }}">⤴</a>
+{% endblock %}
+
 {% block public_body %}
-    <article>
-        {% if article.feed and article.feed.sponsored %}
-            <span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span>
-        {% endif %}
-        <h1>{{ article.title }}</h1>
-        <p class="article-meta">
-            {% if article.feed and article.feed.label %}{{ article.feed.label }} · {% endif %}
-            {{ article.publicationDate|date('d/m/Y H:i') }}
-        </p>
-        {% if article.image %}
-            <img src="{{ article.image }}" alt="" style="max-width: 100%; border-radius: 8px;">
-        {% endif %}
-        {% if article.description %}
-            <p>{{ article.description }}</p>
-        {% endif %}
-
-        {% if article.keywords|length > 0 %}
-            <div class="keyword-tags">
-                {% for keyword in article.keywords %}
-                    <a href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">#{{ keyword.label }}</a>
-                {% endfor %}
+    <div class="with-sidebar">
+        <article class="article-detail">
+            <div class="breadcrumb">
+                <a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a>
+                {% if article.feed and article.feed.label %} · {{ article.feed.label }}{% endif %}
+                · <span class="current">{{ 'article_show.breadcrumb_current'|trans }}</span>
             </div>
-        {% endif %}
 
-        {% if article.countries|length > 0 %}
-            <p>
-                {{ 'article_show.related_countries'|trans }}
-                {% for country in article.countries %}
-                    <a href="{{ path('app_country_show', {code: country.code}) }}">{{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}</a>{{ not loop.last ? ', ' }}
-                {% endfor %}
-            </p>
-        {% endif %}
+            <div>
+                {% if article.feed and article.feed.sponsored %}
+                    <p><span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span></p>
+                {% endif %}
+                <h1 class="article-detail__title">{{ article.title }}</h1>
+            </div>
 
-        <p><a href="{{ article.url }}" rel="nofollow noopener" target="_blank">{{ 'article_show.read_original'|trans }}</a></p>
-    </article>
+            <div class="article-detail__meta">
+                {% if article.feed and article.feed.label %}<span class="source">{{ article.feed.label }}</span><span>·</span>{% endif %}
+                <span>{{ article.publicationDate|date('d/m/Y H:i') }}</span>
+                {% if article.language.value != app.request.locale %}<span class="lang-flag">{{ article.language.value|upper }}</span>{% endif %}
+            </div>
 
-    {% if similarArticles|length > 0 %}
-        <h2>{{ 'article_show.similar'|trans }}</h2>
-        <div class="article-list">
-            {% for similar in similarArticles %}
-                <article class="article-card">
-                    {% if similar.image %}<img src="{{ similar.image }}" alt="" loading="lazy">{% endif %}
-                    <div>
-                        <h3><a href="{{ path('app_article_show', {id: similar.id, slug: similar.title|slugify}) }}">{{ similar.title }}</a></h3>
-                        <div class="article-meta">{{ similar.publicationDate|date('d/m/Y H:i') }}</div>
+            {% if article.image %}
+                <div class="article-detail__media"><img src="{{ article.image }}" alt=""></div>
+            {% endif %}
+
+            {% if article.description %}
+                <div class="prose"><p class="lead">{{ article.description }}</p></div>
+            {% endif %}
+
+            <div class="share-row">
+                <div>{{ 'article_show.read_original_on'|trans }} <a href="{{ article.url }}" rel="nofollow noopener" target="_blank">{{ article.url|split('/')[2]|default(article.url) }} ↗</a></div>
+                <div class="share-row__actions">
+                    <a class="btn btn-secondary btn-sm" href="{{ article.url }}" rel="nofollow noopener" target="_blank">{{ 'article_show.share'|trans }}</a>
+                </div>
+            </div>
+
+            {% if article.keywords|length > 0 %}
+                <div class="section" style="gap:10px">
+                    <span class="eyebrow">{{ 'article_show.article_keywords'|trans }}</span>
+                    {{ m.keyword_tags(article.keywords) }}
+                </div>
+            {% endif %}
+
+            {% if similarArticles|length > 0 %}
+                <section class="section" style="margin-top:8px">
+                    <div class="section-head">
+                        <span class="section-title">{{ 'article_show.similar'|trans }}</span>
                     </div>
-                </article>
-            {% endfor %}
-        </div>
-    {% endif %}
+                    <div class="card-grid cols-3">
+                        {% for similar in similarArticles %}
+                            {{ m.article_card(similar) }}
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+        </article>
+
+        <aside class="sidebar">
+            {% if article.countries|length > 0 %}
+                {% for country in article.countries %}
+                    <div class="card card--pad" style="display:flex; flex-direction:column; gap:12px">
+                        <div class="country-widget">
+                            <span class="flag">{{ country.code|country_flag }}</span>
+                            <div>
+                                <div class="country-widget__name">{{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}</div>
+                            </div>
+                        </div>
+                        <a class="btn btn-block" href="{{ path('app_country_show', {code: country.code}) }}">{{ 'article_show.see_country'|trans }} →</a>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% include 'public/_newsletter.html.twig' with {variant: 'compact'} %}
+        </aside>
+    </div>
+
+    {# Barre d'actions collante — mobile uniquement (design C). #}
+    <div class="mobile-action-bar">
+        <a class="btn btn-secondary" data-share href="{{ article.url }}" rel="nofollow noopener" target="_blank"
+           data-share-url="{{ article.url }}" data-share-title="{{ article.title }}">{{ 'article_show.share'|trans }}</a>
+        <a class="btn" href="{{ article.url }}" rel="nofollow noopener" target="_blank">{{ 'article_show.read_original'|trans }} ↗</a>
+    </div>
 {% endblock %}

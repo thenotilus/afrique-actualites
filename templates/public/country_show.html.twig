@@ -4,26 +4,102 @@
 
 {% block title %}{{ countryName }} — {{ 'app.site_name'|trans }}{% endblock %}
 
+{% block mobile_title %}{{ countryName }}{% endblock %}
+{% block mobile_back %}{{ path('app_country_index') }}{% endblock %}
+
+{% set showArchives = showArchives|default(false) %}
+{% set activeMonth = activeMonth|default(null) %}
+{% set archiveYears = archiveYears|default({}) %}
+{% set month_names = app.request.locale == 'en'
+    ? ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    : ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
+
 {% block public_body %}
-    <h1>{{ countryName }}</h1>
+    <div class="page-hero">
+        <div class="page-hero__lead">
+            <span class="page-hero__flag">{{ country.code|country_flag }}</span>
+            <div>
+                <div class="page-hero__eyebrow">{{ 'country_index.title'|trans }}</div>
+                <h1 class="page-hero__title">{{ countryName }}</h1>
+                <div class="page-hero__meta">{{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</div>
+            </div>
+        </div>
+    </div>
 
-    {% if keyword %}
-        <p>
-            {{ 'country_show.filtered_by'|trans({'%keyword%': keyword.label}) }}
-            <a href="{{ path('app_country_show', {code: country.code}) }}">{{ 'country_show.clear_filter'|trans }}</a>
-        </p>
-    {% endif %}
-
-    {% if availableKeywords|length > 0 %}
-        <div class="keyword-tags">
-            {% for available in availableKeywords %}
-                <a href="{{ path('app_country_by_keyword', {code: country.code, label: available.label}) }}"
-                   class="{{ keyword and keyword.id == available.id ? 'active' : '' }}">
-                    #{{ available.label }}
-                </a>
-            {% endfor %}
+    {% if archiveYears|length > 0 %}
+        <div class="tabs">
+            <a class="tab-link {{ not showArchives ? 'active' }}" href="{{ path('app_country_show', {code: country.code}) }}">{{ 'country_show.recent'|trans }}</a>
+            <a class="tab-link {{ showArchives ? 'active' }}" href="{{ path('app_country_show', {code: country.code, view: 'archives'}) }}">{{ 'country_show.archives'|trans }}</a>
         </div>
     {% endif %}
 
-    {% include 'public/_article_list.html.twig' %}
+    {% if showArchives and activeMonth is null %}
+        <div class="archive">
+            {% for year, months in archiveYears %}
+                <div>
+                    <div class="archive__year">{{ year }}</div>
+                    <div class="archive__grid">
+                        {% for m in months %}
+                            <a class="archive__month" href="{{ path('app_country_show', {code: country.code, view: 'archives', month: '%04d-%02d'|format(year, m.month)}) }}">
+                                <span>{{ month_names[m.month] }}</span>
+                                <span class="archive__count">{{ m.count }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+    {% if not showArchives and availableKeywords|length > 0 %}
+        <div class="section country-cross" style="gap:12px">
+            <div class="tags">
+                <span class="eyebrow" style="align-self:center">{{ 'country_show.cross_with'|trans }}</span>
+                <a class="tag {{ keyword is null ? 'tag--active' : 'tag--outline' }}" href="{{ path('app_country_show', {code: country.code}) }}">{{ 'country_show.all'|trans }}</a>
+                {% for available in availableKeywords %}
+                    <a class="tag {{ keyword and keyword.id == available.id ? 'tag--active' : 'tag--outline' }}"
+                       href="{{ path('app_country_by_keyword', {code: country.code, label: available.label}) }}">{{ available.label }}</a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Mobile : filtres « croiser avec » en feuille glissante (design E). #}
+        <div class="filter-fab">
+            <button class="btn" type="button" data-sheet-open="country-filter-sheet">{{ 'action.filter'|trans }}{% if keyword %} (1){% endif %}</button>
+        </div>
+        <div id="country-filter-sheet" class="bottom-sheet" hidden>
+            <div class="sheet-backdrop" data-sheet-close></div>
+            <div class="sheet-panel">
+                <div class="sheet-head">
+                    <span class="sheet-head__title">{{ 'country_show.cross_with'|trans }}</span>
+                    <button type="button" data-sheet-close aria-label="{{ 'action.close'|trans }}">✕</button>
+                </div>
+                <div class="sheet-body">
+                    <div class="tags">
+                        <a class="tag {{ keyword is null ? 'tag--active' : 'tag--outline' }}" href="{{ path('app_country_show', {code: country.code}) }}">{{ 'country_show.all'|trans }}</a>
+                        {% for available in availableKeywords %}
+                            <a class="tag {{ keyword and keyword.id == available.id ? 'tag--active' : 'tag--outline' }}"
+                               href="{{ path('app_country_by_keyword', {code: country.code, label: available.label}) }}">{{ available.label }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if activeMonth %}
+        <div class="section-head">
+            <span class="section-title">{{ month_names[activeMonth.month] }} {{ activeMonth.year }} <span class="count">· {{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</span></span>
+            <a class="see-all" href="{{ path('app_country_show', {code: country.code, view: 'archives'}) }}">← {{ 'country_show.all_archives'|trans }}</a>
+        </div>
+    {% endif %}
+
+    <div class="with-sidebar">
+        <div class="stack">
+            {% include 'public/_article_list.html.twig' with {activeKeyword: keyword ? keyword.label : null} %}
+        </div>
+        <aside class="sidebar">
+            {% include 'public/_newsletter.html.twig' with {variant: 'compact'} %}
+        </aside>
+    </div>
+    {% endif %}
 {% endblock %}

@@ -19,19 +19,20 @@ use Doctrine\ORM\EntityManagerInterface;
  * de l'ancien `KeywordService` (§4.2). Orchestre le pipeline (normalisation, tokenisation,
  * filtrage des mots vides, racinisation, scoring) et la reconnaissance des pays cités.
  *
- * Ne produit jamais de mot-clé directement utilisable : les nouveaux termes détectés sont créés
- * au statut `SUGGESTED` (§4.4) et rattachés au "sac de mots" de l'article
- * (`Article::addTaxonomy()`), jamais à ses mots-clés retenus (`Article::addKeyword()`, qui exige
- * une taxonomie `VALIDATED`). En revanche, un terme **déjà validé** par un administrateur lors
- * d'un passage précédent est automatiquement promu mot-clé sur tout nouvel article qui le
- * contient : c'est le pipeline qui continue d'exploiter une décision de validation déjà prise,
- * pas un nouveau contournement du circuit (§4.4 : "un mot-clé validé devient un terme utilisable
- * pour classer et étiqueter les articles").
+ * Les nouveaux termes détectés sont **validés par défaut** (décision produit) : rattachés au "sac
+ * de mots" de l'article (`Article::addTaxonomy()`) et, aussitôt, à ses mots-clés retenus
+ * (`Article::addKeyword()`) puisqu'ils sont validés. Un administrateur peut toujours rejeter un
+ * terme a posteriori dans l'écran de modération. Un terme **déjà connu** conserve son statut : le
+ * pipeline ne ressuscite jamais une taxonomie explicitement rejetée, et un terme déjà validé reste
+ * validé et promu mot-clé sur tout nouvel article qui le contient.
  */
 final class ClassificationService
 {
     private const TITLE_WEIGHT = 2;
     private const DESCRIPTION_WEIGHT = 1;
+
+    /** Nombre maximal de termes rattachés à un même article (les plus pertinents d'abord). */
+    private const MAX_TERMS_PER_ARTICLE = 6;
 
     public function __construct(
         private readonly NormalizerInterface $normalizer,
@@ -100,6 +101,9 @@ final class ClassificationService
         $created = 0;
         $reinforced = 0;
 
+        /** @var array<string, Taxonomy> $eligibleTaxonomies Taxonomies retenues, indexées par token */
+        $eligibleTaxonomies = [];
+
         foreach ($scores as $scoredToken) {
             if ($scoredToken->documentFrequency < $this->minDocumentFrequency) {
                 continue;
@@ -112,20 +116,36 @@ final class ClassificationService
 
             $taxonomy = $this->taxonomyRepository->findOneByLabelAndLanguage($scoredToken->token, $language);
             if (null === $taxonomy) {
+                // Les taxonomies détectées sont validées par défaut (décision produit) : elles
+                // deviennent immédiatement des mots-clés utilisables, sans passer par l'écran de
+                // modération. Un administrateur peut toujours en rejeter a posteriori.
                 $taxonomy = new Taxonomy($scoredToken->token, $language);
+                $taxonomy->validateAutomatically();
                 $this->entityManager->persist($taxonomy);
                 ++$created;
             } else {
+                // Une taxonomie déjà connue conserve son statut : on ne ressuscite jamais un terme
+                // qu'un administrateur a explicitement rejeté.
                 ++$reinforced;
             }
             // Score de pertinence recalculé à chaque passage : reflète l'activité la plus
             // récente du terme plutôt qu'une note figée (§4.3 L11 : champ auparavant jamais lu).
             $taxonomy->setMark($scoredToken->totalWeight);
+            $eligibleTaxonomies[$scoredToken->token] = $taxonomy;
+        }
 
-            foreach ($entries as $entry) {
-                if (!isset($entry['tokens'][$scoredToken->token])) {
-                    continue;
-                }
+        // Rattachement borné : on ne conserve que les MAX_TERMS_PER_ARTICLE termes de plus fort
+        // poids dans chaque article, pour éviter de le noyer sous des mots-clés secondaires.
+        foreach ($entries as $entry) {
+            $tokenWeights = array_filter(
+                $entry['tokens'],
+                static fn (string $token) => isset($eligibleTaxonomies[$token]),
+                ARRAY_FILTER_USE_KEY,
+            );
+            arsort($tokenWeights);
+
+            foreach (array_slice($tokenWeights, 0, self::MAX_TERMS_PER_ARTICLE, true) as $token => $weight) {
+                $taxonomy = $eligibleTaxonomies[$token];
                 $entry['article']->addTaxonomy($taxonomy);
                 if ($taxonomy->isValidated()) {
                     $entry['article']->addKeyword($taxonomy);

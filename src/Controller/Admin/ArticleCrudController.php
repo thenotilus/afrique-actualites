@@ -52,7 +52,12 @@ class ArticleCrudController extends AbstractCrudController
     {
         yield IdField::new('id')->hideOnForm();
         yield TextField::new('title', 'Titre');
-        yield ImageField::new('image', 'Image')->hideOnIndex();
+        // L'image est une URL externe fournie par le flux (ou le crawl de repli, §9.4), jamais un
+        // fichier uploadé : on l'affiche telle quelle sur la fiche (ImageField + base path vide) et
+        // on l'édite comme une URL sur le formulaire. Utiliser ImageField sur un formulaire
+        // exigerait un setUploadDir(), inadapté à des URLs distantes.
+        yield ImageField::new('image', 'Image')->setBasePath('')->onlyOnDetail();
+        yield UrlField::new('image', 'Image (URL)')->onlyOnForms();
         yield UrlField::new('url', 'URL')->hideOnIndex();
         yield TextareaField::new('description', 'Description')->hideOnIndex();
         yield AssociationField::new('feed', 'Flux');

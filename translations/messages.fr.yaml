@@ -13,11 +13,23 @@ nav:
     my_user_news: "Mes Unes"
     login: "Connexion"
     logout: "Déconnexion"
+    menu: "Menu"
+    language: "Langue"
+
+action:
+    close: "Fermer"
+    back: "Retour"
+    filter: "Filtrer"
 
 footer:
+    tagline: "agrégateur panafricain"
     newsletter_pitch: "Recevez chaque semaine l'essentiel de l'actualité africaine par email."
     newsletter_email_placeholder: "Votre adresse email"
     newsletter_submit: "S'abonner"
+
+contact_block:
+    headline: "Une info, une remarque, une correction ?"
+    pitch: "Écrivez à notre équipe éditoriale. Nous lisons chaque message."
 
 pagination:
     previous: "Précédent"
@@ -33,30 +45,52 @@ article_show:
     read_original: "Lire l'article original"
     similar: "À lire aussi"
     related_countries: "Concerne :"
+    breadcrumb_current: "Article"
+    read_original_on: "Lire l'article original sur"
+    share: "Partager"
+    article_keywords: "Mots-clés de l'article"
+    see_country: "Voir la page pays"
 
 home:
     latest_articles: "Derniers articles"
 
+article_list_by_keyword:
+    eyebrow: "Mot-clé"
+
+article_list_by_feed:
+    eyebrow: "Source"
+
 country_index:
     title: "Actualité par pays"
+    eyebrow: "L'actualité par pays"
     empty: "Aucun pays actif pour le moment."
 
 country_show:
     filtered_by: "Filtré par le mot-clé « %keyword% »."
     clear_filter: "Retirer le filtre"
+    cross_with: "Croiser avec"
+    all: "Tous"
+    recent: "Récent"
+    archives: "Archives"
+    all_archives: "Toutes les archives"
 
 search:
     title: "Recherche"
-    placeholder: "Rechercher un article, un mot-clé..."
+    prompt: "Rechercher"
+    placeholder: "Rechercher un sujet…"
     submit: "Rechercher"
     too_short: "Saisissez au moins deux caractères."
     no_results: "Aucun résultat pour « %query% »."
-    try_keywords: "Essayez plutôt un de ces mots-clés :"
+    try_keywords: "Essayez un mot-clé plus large, ou l'un de ceux du moment :"
     results_count: "%count% résultat(s) pour « %query% »"
+    results: "Résultats"
+    results_count_short: "%count% article(s)"
 
 user_news_index:
-    title: "Les Unes"
+    title: "Les Unes publiques"
+    intro: "Des sélections thématiques créées par les lecteurs : un ensemble de mots-clés, un flux permanent. Créez la vôtre en deux minutes."
     empty: "Aucune Une publique pour le moment."
+    keywords_count: "%count% mot(s)-clé(s)"
 
 my_user_news:
     title: "Mes Unes"
@@ -76,6 +110,8 @@ user_news_form:
     title_new: "Créer une Une"
     title_edit: "Éditer la Une"
     submit: "Enregistrer"
+    cancel: "Annuler"
+    keywords_hint: "Seuls les mots-clés validés par la rédaction sont proposés."
 
 user_news:
     form:
@@ -96,11 +132,19 @@ login:
     submit: "Se connecter"
     no_account: "Pas encore de compte ?"
     register_link: "Inscrivez-vous"
+    back_to_site: "Retour au site"
+    aside_eyebrow: "À quoi sert un compte"
+    aside_title: "Lire ne demande aucun compte."
+    aside_body: "Le compte sert uniquement à créer et retrouver vos « Unes » — vos listes de veille par mots-clés."
+    aside_point_1: "Créer des Unes, publiques ou privées"
+    aside_point_2: "Les retrouver sur tous vos appareils"
+    aside_newsletter: "Une question ? Écrivez à notre équipe éditoriale : contact@afrique-actualites.com"
 
 registration:
     title: "Inscription"
     intro: "L'inscription est facultative : elle n'est utile que pour créer des Unes personnalisées."
     submit: "S'inscrire"
+    have_account: "Vous avez déjà un compte ?"
     form:
         email: "Email"
         password: "Mot de passe"

@@ -3,29 +3,40 @@
 {% block title %}{{ 'search.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'search.title'|trans }}</h1>
-
-    <form class="inline" method="get" action="{{ path('app_search') }}">
-        <input type="text" name="q" value="{{ query }}" placeholder="{{ 'search.placeholder'|trans }}" required>
-        <button type="submit">{{ 'search.submit'|trans }}</button>
-    </form>
+    <div class="page-hero">
+        <div style="width:100%">
+            <div class="page-hero__eyebrow">{{ 'search.title'|trans }}</div>
+            <h1 class="page-hero__title">{% if query %}« {{ query }} »{% else %}{{ 'search.prompt'|trans }}{% endif %}</h1>
+            <form class="newsletter__form" method="get" action="{{ path('app_search') }}" style="margin-top:16px; max-width:520px" role="search">
+                <input type="search" name="q" value="{{ query }}" placeholder="{{ 'search.placeholder'|trans }}" required
+                       class="js-suggest" data-suggest-url="{{ path('app_search_suggest') }}" autocomplete="off">
+                <button type="submit">{{ 'search.submit'|trans }}</button>
+            </form>
+        </div>
+    </div>
 
     {% if pagination is null %}
         {% if query %}
             <p class="empty-state">{{ 'search.too_short'|trans }}</p>
         {% endif %}
     {% elseif pagination.items|length == 0 %}
-        <p class="empty-state">{{ 'search.no_results'|trans({'%query%': query}) }}</p>
-        {% if trendingKeywords|length > 0 %}
-            <p>{{ 'search.try_keywords'|trans }}</p>
-            <div class="keyword-tags">
-                {% for keyword in trendingKeywords %}
-                    <a href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">#{{ keyword.label }}</a>
-                {% endfor %}
-            </div>
-        {% endif %}
+        <div class="empty-state" style="display:flex; flex-direction:column; gap:14px; align-items:center">
+            <div style="font-family:var(--serif); font-size:21px; font-weight:600; color:var(--ink)">{{ 'search.no_results'|trans({'%query%': query}) }}</div>
+            {% if trendingKeywords|length > 0 %}
+                <div style="font-size:14px">{{ 'search.try_keywords'|trans }}</div>
+                <div class="tags" style="justify-content:center">
+                    {% for keyword in trendingKeywords %}
+                        <a class="tag tag--outline" href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">{{ keyword.label }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
     {% else %}
-        <p class="article-meta">{{ 'search.results_count'|trans({'%count%': pagination.totalItems, '%query%': query}) }}</p>
-        {% include 'public/_article_list.html.twig' with {paginationRouteParams: {q: query}} %}
+        <section class="section">
+            <div class="section-head">
+                <span class="section-title">{{ 'search.results'|trans }} <span class="count">· {{ 'search.results_count_short'|trans({'%count%': pagination.totalItems}) }}</span></span>
+            </div>
+            {% include 'public/_article_list.html.twig' with {paginationRouteParams: {q: query}} %}
+        </section>
     {% endif %}
 {% endblock %}

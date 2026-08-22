@@ -48,6 +48,25 @@ class CountryController extends AbstractController
 
         $language = Language::from($request->getLocale());
         $queryBuilder = $this->articleRepository->byCountry($this->articleRepository->publishedQueryBuilder($language), $country);
+
+        // Archives par mois (parcours 1.E) : `?month=YYYY-MM` borne la liste à un mois, `?view=archives`
+        // affiche la grille de sélection. Un mois mal formé est simplement ignoré (retour au flux récent).
+        $activeMonth = null;
+        if (preg_match('/^(\d{4})-(\d{2})$/', (string) $request->query->get('month', ''), $matches)) {
+            $year = (int) $matches[1];
+            $month = (int) $matches[2];
+            if ($month >= 1 && $month <= 12) {
+                $this->articleRepository->byMonth($queryBuilder, $year, $month);
+                $activeMonth = ['year' => $year, 'month' => $month];
+            }
+        }
+
+        // Regroupement des mois disponibles par année (ordre décroissant préservé depuis le repository).
+        $archiveYears = [];
+        foreach ($this->articleRepository->findPublishedMonthsForCountry($country, $language) as $entry) {
+            $archiveYears[$entry['year']][] = ['month' => $entry['month'], 'count' => $entry['count']];
+        }
+
         $page = max(1, $request->query->getInt('page', 1));
 
         return $this->render('public/country_show.html.twig', [
@@ -55,6 +74,9 @@ class CountryController extends AbstractController
             'keyword' => null,
             'pagination' => $this->paginator->paginate($queryBuilder, $page),
             'availableKeywords' => $taxonomyRepository->findValidatedForCountry($country, $language),
+            'archiveYears' => $archiveYears,
+            'activeMonth' => $activeMonth,
+            'showArchives' => 'archives' === $request->query->get('view') || null !== $activeMonth,
         ]);
     }
 

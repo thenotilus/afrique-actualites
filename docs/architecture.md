@@ -14,7 +14,7 @@ domaine métier** sous `src/` :
 
 ```
 src/
-  Feed/            Gestion des flux RSS/Atom (multilingues)
+  Feed/            Flux RSS/Atom (multilingues) + récupération des articles (voir §6)
   Article/         Agrégation et publication des articles
   Classification/  Moteur de détection de mots-clés (pipeline bilingue FR/EN, voir §10)
   Crawler/         Crawling de repli multi-bots, en complément du flux RSS (voir §9.4)
@@ -66,16 +66,18 @@ obligatoires (voir la section Back-office ci-dessous pour l'erreur concrète que
 
 L'extraction des flux et la classification des mots-clés tournent **en continu** en production
 (confirmé par le porteur produit, §6). La cible d'architecture est un **worker Messenger
-persistant** (superviseur systemd/Supervisor), pas une commande cron périodique classique. Voir
-`config/packages/messenger.yaml` : le transport `sync` est un point de départ de scaffolding : la
-mise en place effective des workers/handlers dédiés est prévue en phase 4/5 du plan de refonte
-(§11.2).
+persistant** (superviseur systemd/Supervisor), pas une commande cron périodique classique. La
+récupération des flux et la classification sont aujourd'hui pilotées ponctuellement par la commande
+`app:feed:ingest` (à cadencer, cf. « Récupération des articles »), tandis que le crawl de repli est
+déjà pleinement asynchrone (transport `async` Doctrine dans `config/packages/messenger.yaml`,
+worker `messenger:consume async`). Un worker d'extraction/classification persistant reste l'étape
+suivante pour passer du déclenchement ponctuel au fil de l'eau.
 
 Un verrou d'exécution (`symfony/lock`, `config/packages/lock.yaml`) doit être utilisé par ces
 workers pour éviter tout chevauchement (§8, point 12 de la documentation fonctionnelle). Le store
-de lock par défaut (`flock`, local au disque) devra être remplacé par un store partagé (ex. Redis,
-déjà présent dans `compose.yaml`) avant la mise en production, si plusieurs instances du worker
-tournent en parallèle.
+de lock est basé sur la base de données (`LOCK_DSN=${DATABASE_URL}`, `DoctrineDbalStore`, table
+`lock_keys` auto-créée) : un store partagé entre instances, adapté dès qu'un worker tourne en
+plusieurs exemplaires en production.
 
 ## Back-office
 
@@ -133,18 +135,17 @@ suffixes, **pas** un stemmer linguistique complet type Snowball/Porter — limit
 documentée dans `LightSuffixStemmer`), et `ScorerInterface` (fréquence documentaire + poids cumulé
 sur le lot, remplace le simple comptage brut d'occurrences).
 
-Le service ne produit **jamais** de mot-clé directement utilisable : chaque nouveau terme détecté
-est créé comme `Taxonomy` au statut `SUGGESTED` et rattaché au "sac de mots" de l'article
-(`addTaxonomy()`), jamais à ses mots-clés retenus. Deux seuils de configuration
-(`config/packages/classification.yaml`) filtrent le bruit avant même la création d'une
-suggestion : `classification.min_document_frequency` (un terme isolé à un seul article du lot
-n'est pas retenu) et `classification.max_document_frequency_ratio` (un terme présent dans la
-quasi-totalité du lot est probablement un mot commun ayant échappé au filtrage de mots vides,
-§4.3 L6). En revanche, un terme **déjà validé** par un administrateur lors d'un passage précédent
-est automatiquement promu mot-clé (`addKeyword()`) sur tout nouvel article qui le contient, dès
-lors qu'il franchit ces mêmes seuils sur le lot en cours : c'est le pipeline qui continue
-d'exploiter une décision de validation déjà prise, pas un nouveau contournement du circuit de
-validation (§4.4). La réconciliation dans l'autre sens (un mot-clé validé après coup profite
+Chaque nouveau terme détecté est créé comme `Taxonomy` **validée par défaut** (décision produit :
+`validateAutomatically()`), rattachée au "sac de mots" de l'article (`addTaxonomy()`) **et** aussitôt
+à ses mots-clés retenus (`addKeyword()`), puisqu'elle est validée. L'écran de modération reste
+disponible pour rejeter a posteriori un terme indésirable. Deux seuils de configuration
+(`config/packages/classification.yaml`) filtrent le bruit avant même la création : 
+`classification.min_document_frequency` (un terme isolé à un seul article du lot n'est pas retenu)
+et `classification.max_document_frequency_ratio` (un terme présent dans la quasi-totalité du lot
+est probablement un mot commun ayant échappé au filtrage de mots vides, §4.3 L6). Un terme **déjà
+connu** conserve son statut : le pipeline ne ressuscite jamais une taxonomie qu'un administrateur a
+explicitement **rejetée**, et un terme déjà validé reste validé et promu mot-clé sur tout nouvel
+article qui le contient. La réconciliation dans l'autre sens (un mot-clé validé après coup profite
 rétroactivement aux articles déjà traités) est assurée côté back-office par
 `TaxonomyCrudController::reconcileValidatedTaxonomy()`, appelée depuis les actions
 "Valider"/"Valider la sélection".
@@ -168,6 +169,56 @@ et `tests/Classification/ClassificationServiceTest.php` (intégration bout en bo
 d'articles français et anglais aux titres réalistes, vérifiant la création de suggestions, la
 séparation des espaces de taxonomies par langue, la promotion automatique d'un mot-clé déjà validé
 et le rattachement des pays).
+
+## Récupération des articles (phase 6)
+
+`src/Feed/FeedIngester.php` transforme un `Feed` en `Article` : c'est la brique d'ingestion qui
+manquait jusqu'ici (aucun code ne créait d'`Article` — voir le point d'attention historique en
+phase 5 plus bas). Il récupère le flux via `symfony/http-client` (user-agent dédié
+`feed.user_agent`, `config/packages/feed.yaml`), le parse avec `src/Feed/FeedParser.php` — un
+parseur RSS 2.0 / Atom 1.0 **sans dépendance externe** (ext-simplexml), pour rester dans la
+contrainte de dépendances du projet — puis, pour chaque entrée :
+
+- **déduplique par `urlHash`** en une seule requête (`ArticleRepository::findExistingUrlHashes()`)
+  et écarte les doublons internes au flux : l'ingestion est rejouable sans créer de doublon ;
+- **crée l'`Article`** avec les métadonnées du flux (langue héritée du `Feed`) et renseigne au
+  passage le libellé du flux resté anonyme (`Feed::$label`) depuis le titre de canal ;
+- **publie par défaut** l'article s'il est **complet** (`Article::isComplete()` : titre +
+  description + image — décision produit) ; sinon il reste non publié jusqu'à ce que le crawl comble
+  les métadonnées manquantes, moment où il est publié à son tour (même règle dans le handler de
+  crawl) ;
+- **déclenche le crawl de repli** (`CrawlArticleMetaMessage`, §9.4) uniquement pour les entrées
+  dont le flux n'a pas fourni titre, description ou image.
+
+La commande `app:feed:ingest` (`src/Feed/Command/IngestFeedsCommand.php`) est le point d'entrée :
+elle ingère tous les flux actifs (ou un seul via `--feed`), puis lance la classification (§10) en
+**une seule passe** sur l'ensemble des articles créés — le scorer travaillant par fréquence
+documentaire, un lot global est plus pertinent qu'un passage par flux. C'est ce qui donne enfin un
+appelant réel à `ClassificationService`. `--dry-run` lit et analyse les flux sans rien écrire.
+C'est la forme ponctuelle et rejouable du « worker d'extraction continu » (§6), à cadencer par un
+ordonnanceur tant que le worker persistant n'est pas branché.
+
+**Le crawl est traité en asynchrone** (`CrawlArticleMetaMessage` routé vers le transport `async`,
+file Doctrine `messenger_messages`, `config/packages/messenger.yaml`). L'ingestion (comme
+`app:crawler:run`) se contente donc de **mettre les crawls en file** et rend la main aussitôt ; un
+worker les traite ensuite :
+
+```
+php bin/console messenger:consume async
+```
+
+Ce choix n'est pas qu'une optimisation : le crawl est plafonné à 12 requêtes/minute/domaine
+(`config/packages/rate_limiter.yaml`) et, quota épuisé, le handler reprogramme le message via un
+`DelayStamp`. Sur l'ancien transport `sync`, ce délai était ignoré et le handler se re-dispatchait
+**en boucle récursive synchrone** jusqu'à épuisement mémoire dès qu'un flux apportait plus de 12
+articles à compléter sur un même domaine. En asynchrone, le `DelayStamp` est réellement différé et
+le worker respire. La table de file d'attente se crée par
+`php bin/console messenger:setup-transports` (transport Doctrine `symfony/doctrine-messenger`).
+
+Testé par `tests/Feed/FeedParserTest.php` (RSS/Atom, extraction d'image, tolérance, formats
+rejetés), `tests/Feed/FeedIngesterTest.php` (création, libellé, crawl conditionnel, idempotence,
+dry-run) et `tests/Feed/Command/IngestFeedsCommandTest.php` (flux actifs uniquement, `--feed`,
+`--dry-run`, gestion d'échec) — tous via `MockHttpClient`, sans réseau.
 
 ## Crawling multi-bots de repli (phase 5)
 
@@ -204,9 +255,18 @@ fournie par le flux.
   si un domaine bloque systématiquement tous les profils) et l'écran `CrawlAttemptCrudController`
   (lecture seule).
 
-Le transport Messenger reste `sync` à ce stade (même limitation de scaffolding que documentée plus
-haut pour les traitements continus) : un vrai transport en file d'attente est à brancher avant la
-mise en production.
+La commande `app:crawler:run` (`src/Crawler/Command/CrawlArticlesCommand.php`) dispatche un
+`CrawlArticleMetaMessage` pour chaque article dont le flux RSS n'a pas fourni toutes les métadonnées
+(titre, description ou image — pré-filtre `ArticleRepository::findIdsMissingMetadata()`). Elle
+comble ainsi le manque d'appelant réel relevé plus bas : en attendant le worker d'extraction RSS
+continu (§6), c'est le point d'entrée pour lancer le crawl de repli. Idempotente et rejouable
+(`--limit` pour plafonner le lot, `--dry-run` pour lister sans crawler) : le handler revérifie
+chaque article et le cache par URL évite de retraiter une page déjà résolue.
+
+`CrawlArticleMetaMessage` est routé vers le transport `async` (file Doctrine) : `app:crawler:run`
+se contente de mettre les crawls en file, traités par un worker `php bin/console messenger:consume
+async`. Voir la section « Récupération des articles » ci-dessus pour le détail (et pourquoi
+l'asynchrone est nécessaire, pas seulement préférable, face à la reprogrammation par `DelayStamp`).
 
 Testé par `tests/Crawler/RobotsTxtCheckerTest.php`, `tests/Crawler/OpenGraphMetaExtractorTest.php`
 et `tests/Crawler/BotProfileRegistryTest.php` (chaque composant en isolation, via `MockHttpClient`
@@ -214,7 +274,8 @@ pour les deux premiers) ; `tests/Crawler/CrawlerServiceTest.php` (intégration :
 respect de `robots.txt`, mise en cache, abandon sans requête HTTP au quota épuisé) ;
 `tests/Crawler/Message/CrawlArticleMetaMessageHandlerTest.php` (garde de non-écrasement, reprogram-
 mation au lieu de bloquer) ; `tests/Crawler/Repository/CrawlAttemptRepositoryTest.php` (agrégation
-par domaine).
+par domaine) ; `tests/Crawler/Command/CrawlArticlesCommandTest.php` (dispatch limité aux articles
+incomplets, `--limit`, `--dry-run`, rejet d'un `--limit` invalide).
 
 ## Pages publiques (phase 6)
 
@@ -292,8 +353,11 @@ Les entités vivent sous `src/<Domaine>/Entity/` (voir liste ci-dessus). Points 
 connaître :
 
 - **`Taxonomy`** porte un statut (`App\Taxonomy\Enum\TaxonomyStatus` : `SUGGESTED` par défaut à la
-  création, `VALIDATED`, `REJECTED`, `ARCHIVED`) et une langue (`App\Shared\ValueObject\Language`).
-  Une même chaîne peut donc exister comme deux taxonomies distinctes selon la langue.
+  création de l'entité, `VALIDATED`, `REJECTED`, `ARCHIVED`) et une langue
+  (`App\Shared\ValueObject\Language`). Une même chaîne peut donc exister comme deux taxonomies
+  distinctes selon la langue. Note : les taxonomies **issues du pipeline** sont validées d'emblée
+  (`validateAutomatically()`, décision produit) ; le statut `SUGGESTED` initial ne concerne plus
+  que les créations hors pipeline.
 - **`Article::addKeyword()`** et **`UserNews::addTaxonomy()`** lèvent une `\LogicException` si on
   tente d'y rattacher une taxonomie qui n'est pas `VALIDATED` — c'est la garde-fou de code qui
   traduit le jalon critique du plan de refonte (§11.3) : un mot-clé "suggéré" ne doit jamais fuiter
@@ -311,7 +375,7 @@ connaître :
   composant Security natif de Symfony, en remplacement de FOSUserBundle (§9.1).
 - L'ancienne entité `Cache` (cache applicatif maison, table SQL) **n'est pas reprise** : la cible
   est le composant Cache standard de Symfony (PSR-6), configuré dans
-  `config/packages/cache.yaml`, avec un adaptateur Redis en production (§9.1, §8 point 8).
+  `config/packages/cache.yaml` (adaptateur filesystem par défaut ; §9.1, §8 point 8).
 
 ### Migration Doctrine — action requise avant la mise en production
 
@@ -348,17 +412,20 @@ php bin/console doctrine:migrations:migrate
   `ClassificationService` n'a encore aucun appelant (aucune commande/worker ne l'injecte), donc le
   compilateur de conteneur Symfony l'élague comme service inutilisé en environnement de test — les
   tests d'intégration le construisent directement avec ses dépendances réelles plutôt que de le
-  récupérer depuis le conteneur. Toujours vrai après la phase 5 (crawling) : celle-ci ne branche
-  pas `ClassificationService`, qui reste sans appelant tant que le futur worker d'extraction/
-  classification continu (§6) n'existe pas.
+  récupérer depuis le conteneur. Ce n'est plus vrai depuis la commande d'ingestion `app:feed:ingest`
+  (voir « Récupération des articles » ci-dessus), qui injecte `ClassificationService` : il a
+  désormais un appelant réel et n'est plus élagué du conteneur.
 - **Phase 5 (crawling multi-bots)** : `CrawlerService`, `BotProfileRegistry`, repli en cascade
   entre profils de bots, respect de `robots.txt`, throttling agrégé par domaine, mise en cache par
   URL, journal `CrawlAttempt` et tableau de bord par domaine — terminée. Testée par
   `tests/Crawler/**/*Test.php`. `CrawlArticleMetaMessageHandler` a désormais un appelant réel
-  (`CrawlerService` n'est donc plus élagué du conteneur, à la différence de `ClassificationService`
-  ci-dessus), mais le transport Messenger reste `sync` : aucun worker d'extraction RSS n'existe
-  encore pour dispatcher `CrawlArticleMetaMessage` en conditions réelles — ce sera le rôle du
-  futur worker continu (§6).
+  (`CrawlerService` n'est donc plus élagué du conteneur), et la commande `app:crawler:run` permet
+  de dispatcher `CrawlArticleMetaMessage` en conditions réelles pour les articles à métadonnées
+  incomplètes. Le crawl est traité en **asynchrone** (transport `async` Doctrine, worker
+  `messenger:consume async`) — cf. la note sur la reprogrammation par `DelayStamp`. La
+  **récupération des articles** proprement dite (lecture des flux → création des `Article` →
+  classification), longtemps absente, est livrée avec la phase 6 : voir la section dédiée ci-dessus
+  et la commande `app:feed:ingest`.
 - **Phase 6 (pages publiques)** : accueil, listes (flux/mot-clé/pays/recherche), fiche article,
   page pays avec croisement mot-clé et archives paginées, "Unes" (annuaire, page dédiée, gestion
   utilisateur complète), connexion/inscription, capture newsletter, sitemap-index — terminée.

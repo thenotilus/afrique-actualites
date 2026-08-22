@@ -100,6 +100,8 @@ final class CrawlArticleMetaMessageHandlerTest extends KernelTestCase
         self::assertSame($originalTitle, $article->getTitle());
         self::assertSame('Description issue du crawl', $article->getDescription());
         self::assertSame('https://exemple.com/une.jpg', $article->getImage());
+        // Le crawl a complété titre + description + image : l'article est désormais publié par défaut.
+        self::assertTrue($article->isPublish(), 'Un article complété par le crawl est publié par défaut.');
     }
 
     public function testReschedulesInsteadOfBlockingWhenTheDomainRateLimitIsExhausted(): void

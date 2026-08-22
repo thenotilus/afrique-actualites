@@ -1,0 +1,58 @@
+{#
+    Fragments réutilisables du site public — cartes d'article, lignes de liste et
+    pastilles de mots-clés. Centralisés ici pour garder un gabarit d'article unique
+    (§6, prompt de conception parcours 1) partagé par l'accueil, les flux, les
+    mots-clés, les pays, la recherche et les Unes.
+#}
+
+{# Pastilles de mots-clés. `active` = libellé à mettre en avant (ocre) pour rappeler le filtre courant. #}
+{% macro keyword_tags(keywords, active) %}
+    {% if keywords|length > 0 %}
+        <div class="tags">
+            {% for keyword in keywords %}
+                <a class="tag {{ active is defined and active and active == keyword.label ? 'tag--active' }}"
+                   href="{{ path('app_article_by_keyword', {label: keyword.label}) }}">{{ keyword.label }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endmacro %}
+
+{# Métadonnée mono : source · date (+ pastille de langue si l'article n'est pas dans la langue courante). #}
+{% macro article_meta(article) %}
+    {% if article.feed and article.feed.label %}<span class="source">{{ article.feed.label }}</span> · {% endif %}
+    {{ article.publicationDate|date('d/m/Y H:i') }}
+    {% if article.language.value != app.request.locale %}<span class="lang-flag">{{ article.language.value|upper }}</span>{% endif %}
+{% endmacro %}
+
+{# Carte verticale : visuel en haut, méta, titre, mots-clés. #}
+{% macro article_card(article, active) %}
+    {% import _self as m %}
+    <article class="article-card">
+        <a class="thumb" href="{{ path('app_article_show', {id: article.id, slug: article.title|slugify}) }}" aria-hidden="true" tabindex="-1">
+            {% if article.image %}<img src="{{ article.image }}" alt="" loading="lazy">{% endif %}
+            {% if article.feed and article.feed.sponsored %}
+                <span class="badge badge-sponsored hero-feature__badge" style="position:absolute; top:10px; left:10px;">{{ 'article_list.sponsored'|trans }}</span>
+            {% endif %}
+        </a>
+        <div class="article-card__body">
+            <div class="article-card__meta">{{ m.article_meta(article) }}</div>
+            <h3 class="article-card__title"><a href="{{ path('app_article_show', {id: article.id, slug: article.title|slugify}) }}">{{ article.title }}</a></h3>
+            {{ m.keyword_tags(article.keywords, active|default(null)) }}
+        </div>
+    </article>
+{% endmacro %}
+
+{# Ligne horizontale : petit visuel à gauche, titre + méta à droite. #}
+{% macro article_row(article, active) %}
+    {% import _self as m %}
+    <article class="article-row">
+        <a class="article-row__thumb" href="{{ path('app_article_show', {id: article.id, slug: article.title|slugify}) }}" aria-hidden="true" tabindex="-1">
+            {% if article.image %}<img src="{{ article.image }}" alt="" loading="lazy">{% endif %}
+        </a>
+        <div class="article-row__body">
+            <h3 class="article-row__title"><a href="{{ path('app_article_show', {id: article.id, slug: article.title|slugify}) }}">{{ article.title }}</a></h3>
+            <div class="article-row__meta">{{ m.article_meta(article) }}</div>
+            {{ m.keyword_tags(article.keywords, active|default(null)) }}
+        </div>
+    </article>
+{% endmacro %}

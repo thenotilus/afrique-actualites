@@ -170,14 +170,16 @@ final class ClassificationServiceTest extends KernelTestCase
         self::assertSame(10, $summary->articlesProcessed);
 
         // Un terme présent dans au moins deux articles distincts du lot, sans dépasser 60 % de
-        // celui-ci, devient une suggestion (§10.1.7) — jamais directement un mot-clé (§4.4).
+        // celui-ci, devient une taxonomie (§10.1.7) — validée par défaut (décision produit) et donc
+        // immédiatement promue mot-clé sur les articles qui la contiennent.
         $frenchElection = $this->taxonomyRepository->findOneByLabelAndLanguage('election', Language::FRENCH);
         self::assertNotNull($frenchElection);
-        self::assertSame(TaxonomyStatus::SUGGESTED, $frenchElection->getStatus());
+        self::assertSame(TaxonomyStatus::VALIDATED, $frenchElection->getStatus());
+        self::assertTrue($frenchArticles[0]->getKeywords()->contains($frenchElection), 'Une taxonomie validée par défaut devient un mot-clé de l\'article.');
 
         $frenchSenegal = $this->taxonomyRepository->findOneByLabelAndLanguage('senegal', Language::FRENCH);
         self::assertNotNull($frenchSenegal);
-        self::assertSame(TaxonomyStatus::SUGGESTED, $frenchSenegal->getStatus());
+        self::assertSame(TaxonomyStatus::VALIDATED, $frenchSenegal->getStatus());
 
         // Espaces de taxonomies distincts par langue (§3bis) : même orthographe, deux entités.
         $englishElection = $this->taxonomyRepository->findOneByLabelAndLanguage('election', Language::ENGLISH);
@@ -204,6 +206,34 @@ final class ClassificationServiceTest extends KernelTestCase
         self::assertSame('NG', $frenchArticles[2]->getCountries()->first()->getCode());
         self::assertSame('SN', $englishArticles[0]->getCountries()->first()->getCode());
         self::assertSame('NG', $englishArticles[2]->getCountries()->first()->getCode());
+    }
+
+    public function testCapsTheNumberOfTermsAttachedToAnArticle(): void
+    {
+        $feed = new Feed('https://example.com/fr/rss.xml', Language::FRENCH);
+        $this->entityManager->persist($feed);
+
+        // Deux articles partagent huit termes éligibles (fréquence documentaire = 2, soit 50 % du
+        // lot de quatre : au-dessus du seuil minimal, sous le plafond de 60 %). Deux articles de
+        // remplissage portent le lot à quatre pour rester sous le plafond de fréquence.
+        $shared = 'commerce energie transport education agriculture industrie tourisme finance';
+        $articleA = $this->makeArticle($feed, $shared, $shared);
+        $articleB = $this->makeArticle($feed, $shared, $shared);
+        $filler = 'football stade championnat supporter';
+        $fillerA = $this->makeArticle($feed, $filler, $filler);
+        $fillerB = $this->makeArticle($feed, $filler, $filler);
+
+        foreach ([$articleA, $articleB, $fillerA, $fillerB] as $article) {
+            $this->entityManager->persist($article);
+        }
+        $this->entityManager->flush();
+
+        $this->classificationService->classifyArticles([$articleA, $articleB, $fillerA, $fillerB]);
+
+        // Bien que huit termes soient éligibles, un article n'en conserve que les six plus
+        // pertinents, taxonomies comme mots-clés.
+        self::assertCount(6, $articleA->getTaxonomies());
+        self::assertCount(6, $articleA->getKeywords());
     }
 
     private function makeArticle(Feed $feed, string $title, string $description): Article

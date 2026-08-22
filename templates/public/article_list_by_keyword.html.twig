@@ -2,8 +2,23 @@
 
 {% block title %}#{{ keyword.label }} — {{ 'app.site_name'|trans }}{% endblock %}
 
+{% block mobile_title %}{{ keyword.label }}{% endblock %}
+
 {% block public_body %}
-    <h1>#{{ keyword.label }}</h1>
-    <p class="article-meta">{{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</p>
-    {% include 'public/_article_list.html.twig' %}
+    <div class="page-hero">
+        <div>
+            <div class="page-hero__eyebrow">{{ 'article_list_by_keyword.eyebrow'|trans }}</div>
+            <h1 class="page-hero__title">{{ keyword.label }}</h1>
+            <div class="page-hero__meta">{{ 'article_list.count'|trans({'%count%': pagination.totalItems}) }}</div>
+        </div>
+    </div>
+
+    <div class="with-sidebar">
+        <div class="stack">
+            {% include 'public/_article_list.html.twig' with {activeKeyword: keyword.label} %}
+        </div>
+        <aside class="sidebar">
+            {% include 'public/_newsletter.html.twig' with {variant: 'compact'} %}
+        </aside>
+    </div>
 {% endblock %}

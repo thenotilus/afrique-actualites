@@ -8,6 +8,7 @@ use App\Shared\ValueObject\Language;
 use App\Taxonomy\Enum\TaxonomyStatus;
 use App\Taxonomy\Repository\TaxonomyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -53,5 +54,34 @@ class SearchController extends AbstractController
                 8,
             ),
         ]);
+    }
+
+    /**
+     * Autocomplétion de la recherche (parcours 1.F) : renvoie en JSON les mots-clés validés et
+     * les titres d'articles correspondant à la requête, dans la langue courante. Consommé par le
+     * script du header ; volontairement muet (listes vides) sous le seuil de longueur.
+     */
+    #[Route('/recherche/suggestions', name: 'app_search_suggest', methods: ['GET'])]
+    public function suggest(Request $request): JsonResponse
+    {
+        $query = trim((string) $request->query->get('q', ''));
+        $language = Language::from($request->getLocale());
+
+        if (mb_strlen($query) < self::MIN_QUERY_LENGTH) {
+            return $this->json(['keywords' => [], 'articles' => []]);
+        }
+
+        $keywords = array_map(fn (array $keyword): array => [
+            'label' => $keyword['label'],
+            'count' => $keyword['count'],
+            'url' => $this->generateUrl('app_article_by_keyword', ['label' => $keyword['label']]),
+        ], $this->articleRepository->suggestKeywords($query, $language));
+
+        $articles = array_map(fn ($article): array => [
+            'title' => $article->getTitle(),
+            'url' => $this->generateUrl('app_article_show', ['id' => $article->getId()]),
+        ], $this->articleRepository->suggestArticles($query, $language));
+
+        return $this->json(['keywords' => $keywords, 'articles' => $articles]);
     }
 }

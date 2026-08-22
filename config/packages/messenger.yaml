@@ -4,23 +4,24 @@ framework:
         # failure_transport: failed
 
         transports:
-            # https://symfony.com/doc/current/messenger.html#transport-configuration
-            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
+            # File d'attente Doctrine (table `messenger_messages`, créée par
+            # `php bin/console messenger:setup-transports`). Le crawl de repli (§9.4) y est routé
+            # pour ne jamais bloquer la récupération RSS, et surtout pour que la reprogrammation
+            # via `DelayStamp` (quota de domaine épuisé) soit réellement différée : sur le transport
+            # `sync`, ce délai était ignoré et le handler se re-dispatchait en boucle récursive
+            # jusqu'à épuisement mémoire. Traité par un worker `messenger:consume async`.
+            async: '%env(MESSENGER_TRANSPORT_DSN)%'
             # failed: 'doctrine://default?queue_name=failed'
             sync: 'sync://'
 
         routing:
-            # Le crawl de repli (§9.4) doit rester asynchrone pour ne jamais bloquer l'extraction
-            # RSS principale sur un site source lent — mais un vrai transport en file d'attente
-            # (Doctrine, Redis...) reste à brancher avant la mise en production : voir la note sur
-            # les traitements continus dans docs/architecture.md. Le transport `sync` ci-dessus
-            # n'est qu'un point de départ de scaffolding.
-            App\Crawler\Message\CrawlArticleMetaMessage: sync
+            App\Crawler\Message\CrawlArticleMetaMessage: async
 
-# when@test:
-#    framework:
-#        messenger:
-#            transports:
-#                # replace with your transport name here (e.g., my_transport: 'in-memory://')
-#                # For more Messenger testing tools, see https://github.com/zenstruck/messenger-test
-#                async: 'in-memory://'
+when@test:
+    framework:
+        messenger:
+            transports:
+                # En test, aucun worker ne tourne : les messages sont simplement collectés
+                # en mémoire (pas de table, pas d'exécution). Les tests qui vérifient le
+                # comportement du crawl injectent de toute façon un bus dédié.
+                async: 'in-memory://'

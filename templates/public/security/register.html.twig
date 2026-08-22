@@ -3,12 +3,21 @@
 {% block title %}{{ 'registration.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'registration.title'|trans }}</h1>
-    <p>{{ 'registration.intro'|trans }}</p>
-
-    {{ form_start(form, {attr: {class: 'stacked'}}) }}
-        {{ form_row(form.email) }}
-        {{ form_row(form.plainPassword) }}
-        <p><button type="submit">{{ 'registration.submit'|trans }}</button></p>
-    {{ form_end(form) }}
+    <div class="auth-card" style="max-width:480px">
+        <div class="auth-card__head">
+            <span class="brand__name">{{ 'registration.title'|trans }}</span>
+            <a href="{{ path('app_home') }}" style="color:var(--green-soft-2); font-size:13px">← {{ 'login.back_to_site'|trans }}</a>
+        </div>
+        <div style="padding:24px">
+            <p style="font-size:13px; color:var(--muted); margin:0 0 16px">{{ 'registration.intro'|trans }}</p>
+            {{ form_start(form, {attr: {class: 'stacked'}}) }}
+                {{ form_row(form.email) }}
+                {{ form_row(form.plainPassword) }}
+                <button type="submit" class="btn btn-block">{{ 'registration.submit'|trans }}</button>
+            {{ form_end(form) }}
+            <div style="font-size:13px; color:var(--muted); text-align:center; border-top:1px solid var(--line); padding-top:14px; margin-top:16px">
+                {{ 'registration.have_account'|trans }} <a href="{{ path('app_login') }}">{{ 'login.title'|trans }}</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}

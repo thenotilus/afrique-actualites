@@ -12,6 +12,18 @@ controllers:
     defaults:
         _locale: fr
 
+# Racine sans locale : un visiteur qui arrive sur "/" (aucun préfixe de langue) est redirigé vers
+# la langue par défaut, "/fr/" (§3bis). Redirection temporaire (302) pour laisser la porte ouverte
+# à une future négociation de langue (Accept-Language). Utilise le RedirectController natif de
+# Symfony — aucun contrôleur dédié nécessaire.
+root_to_default_locale:
+    path: /
+    controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController::redirectAction
+    defaults:
+        route: app_home
+        _locale: fr
+        permanent: false
+
 # Index de sitemaps à la racine (/sitemap.xml, sans préfixe de locale), qu'un moteur de recherche
 # attend à cet emplacement précis (§3.10). Vit hors de src/Controller/ précisément pour échapper
 # au préfixe /{_locale} ci-dessus — voir le docblock de SitemapIndexController pour le détail

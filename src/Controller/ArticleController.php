@@ -19,6 +19,9 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class ArticleController extends AbstractController
 {
+    /** Nombre d'articles affichés sur l'accueil (hors article mis en avant). */
+    private const HOME_ARTICLES_PER_PAGE = 12;
+
     public function __construct(
         private readonly ArticleRepository $articleRepository,
         private readonly QueryPaginator $paginator,
@@ -34,7 +37,7 @@ class ArticleController extends AbstractController
 
         return $this->render('public/home.html.twig', [
             'featuredArticle' => $this->articleRepository->findLatestSponsored($language),
-            'pagination' => $this->paginator->paginate($queryBuilder, $page),
+            'pagination' => $this->paginator->paginate($queryBuilder, $page, self::HOME_ARTICLES_PER_PAGE),
         ]);
     }
 

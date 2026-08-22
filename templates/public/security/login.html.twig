@@ -3,24 +3,50 @@
 {% block title %}{{ 'login.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'login.title'|trans }}</h1>
-    <p>{{ 'login.intro'|trans }}</p>
+    <div class="auth-card">
+        <div class="auth-card__head">
+            <a class="brand" href="{{ path('app_home') }}">
+                <img class="brand__mark" src="{{ asset('assets/afkr-logo-icon.jpg') }}" alt="" width="36" height="36">
+                <span class="brand__name">{{ 'app.site_name'|trans }}</span>
+            </a>
+            <a href="{{ path('app_home') }}" style="color:var(--green-soft-2); font-size:13px">← {{ 'login.back_to_site'|trans }}</a>
+        </div>
+        <div class="auth-card__grid">
+            <div class="stack" style="gap:16px">
+                <h1 style="font-size:28px">{{ 'login.title'|trans }}</h1>
 
-    {% if error %}
-        <div class="flash flash-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-    {% endif %}
+                {% if error %}
+                    <div class="flash flash-error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                {% endif %}
 
-    <form class="stacked" method="post" action="{{ path('app_login') }}">
-        <label for="username">{{ 'login.email'|trans }}</label>
-        <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus>
+                <form class="stacked" method="post" action="{{ path('app_login') }}">
+                    <div class="field">
+                        <label for="username">{{ 'login.email'|trans }}</label>
+                        <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus>
+                    </div>
+                    <div class="field">
+                        <label for="password">{{ 'login.password'|trans }}</label>
+                        <input type="password" id="password" name="_password" required>
+                    </div>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                    <button type="submit" class="btn btn-block">{{ 'login.submit'|trans }}</button>
+                </form>
 
-        <label for="password">{{ 'login.password'|trans }}</label>
-        <input type="password" id="password" name="_password" required>
+                <div style="font-size:13px; color:var(--muted); text-align:center">
+                    {{ 'login.no_account'|trans }} <a href="{{ path('app_register') }}">{{ 'login.register_link'|trans }}</a>
+                </div>
+            </div>
 
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-        <p><button type="submit">{{ 'login.submit'|trans }}</button></p>
-    </form>
-
-    <p>{{ 'login.no_account'|trans }} <a href="{{ path('app_register') }}">{{ 'login.register_link'|trans }}</a></p>
+            <aside class="auth-aside">
+                <span class="eyebrow" style="color:var(--ocre)">{{ 'login.aside_eyebrow'|trans }}</span>
+                <div style="font-family:var(--serif); font-size:22px; font-weight:600; line-height:1.25">{{ 'login.aside_title'|trans }}</div>
+                <p style="font-size:14px; color:var(--muted); margin:0">{{ 'login.aside_body'|trans }}</p>
+                <ul style="border-top:1px solid var(--line-soft); padding-top:12px">
+                    <li>{{ 'login.aside_point_1'|trans }}</li>
+                    <li>{{ 'login.aside_point_2'|trans }}</li>
+                </ul>
+                <div class="callout">{{ 'login.aside_newsletter'|trans }}</div>
+            </aside>
+        </div>
+    </div>
 {% endblock %}

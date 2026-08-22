@@ -198,6 +198,18 @@ class Article
         return $this;
     }
 
+    /**
+     * Un article est « complet » lorsqu'il porte les trois métadonnées d'affichage : titre,
+     * description et image. C'est le critère de publication automatique par défaut (décision
+     * produit) appliqué à l'ingestion et après le crawl de repli (§9.4).
+     */
+    public function isComplete(): bool
+    {
+        return '' !== trim($this->title)
+            && '' !== trim($this->description)
+            && null !== $this->image;
+    }
+
     public function isPublish(): bool
     {
         return $this->publish;

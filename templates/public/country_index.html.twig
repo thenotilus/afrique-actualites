@@ -3,7 +3,12 @@
 {% block title %}{{ 'country_index.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'country_index.title'|trans }}</h1>
+    <div class="page-hero">
+        <div>
+            <div class="page-hero__eyebrow">{{ 'country_index.eyebrow'|trans }}</div>
+            <h1 class="page-hero__title">{{ 'country_index.title'|trans }}</h1>
+        </div>
+    </div>
 
     {% if countries|length == 0 %}
         <p class="empty-state">{{ 'country_index.empty'|trans }}</p>
@@ -11,7 +16,8 @@
         <div class="country-grid">
             {% for country in countries %}
                 <a href="{{ path('app_country_show', {code: country.code}) }}">
-                    {{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}
+                    <span class="flag">{{ country.code|country_flag }}</span>
+                    <span>{{ app.request.locale == 'en' ? country.nameEn : country.nameFr }}</span>
                 </a>
             {% endfor %}
         </div>

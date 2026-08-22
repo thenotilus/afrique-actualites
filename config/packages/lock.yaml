@@ -1,6 +1,7 @@
-# Store par défaut (flock) pour le développement local. À remplacer par un store partagé
-# (ex. Redis, voir docker-compose.yml) avant la mise en production : les futurs workers
-# d'extraction/classification continus doivent se coordonner via ce verrou pour éviter tout
-# chevauchement d'exécution (§8 point 12 de la documentation fonctionnelle).
+# Store de verrou basé sur la base de données (LOCK_DSN=${DATABASE_URL} par défaut) : réutilise
+# la connexion applicative via DoctrineDbalStore, la table `lock_keys` est créée automatiquement
+# au premier verrou. Store partagé entre instances : les futurs workers d'extraction/
+# classification continus se coordonnent via ce verrou pour éviter tout chevauchement d'exécution
+# (§8 point 12 de la documentation fonctionnelle).
 framework:
     lock: '%env(LOCK_DSN)%'

@@ -3,15 +3,40 @@
 {% block title %}{{ 'user_news_index.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ 'user_news_index.title'|trans }}</h1>
-
-    {% if userNewsList|length == 0 %}
-        <p class="empty-state">{{ 'user_news_index.empty'|trans }}</p>
-    {% else %}
-        <div class="country-grid">
-            {% for userNews in userNewsList %}
-                <a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a>
-            {% endfor %}
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <span class="section-title" style="font-size:32px">{{ 'user_news_index.title'|trans }}</span>
+                <div style="font-size:14px; color:var(--muted); max-width:70ch; margin-top:6px">{{ 'user_news_index.intro'|trans }}</div>
+            </div>
+            {% if app.user %}
+                <a class="btn btn-accent" href="{{ path('app_user_news_new') }}">+ {{ 'my_user_news.new'|trans }}</a>
+            {% else %}
+                <a class="btn btn-accent" href="{{ path('app_login') }}">+ {{ 'my_user_news.new'|trans }}</a>
+            {% endif %}
         </div>
-    {% endif %}
+
+        {% if userNewsList|length == 0 %}
+            <p class="empty-state">{{ 'user_news_index.empty'|trans }}</p>
+        {% else %}
+            <div class="card-grid cols-4">
+                {% for userNews in userNewsList %}
+                    <div class="une-card">
+                        <div class="une-card__title"><a href="{{ path('app_user_news_show', {id: userNews.id, slug: userNews.label|slugify}) }}">{{ userNews.label }}</a></div>
+                        {% if userNews.taxonomies|length > 0 %}
+                            <div class="tags">
+                                {% for taxonomy in userNews.taxonomies|slice(0, 3) %}
+                                    <span class="tag">{{ taxonomy.label }}</span>
+                                {% endfor %}
+                                {% if userNews.taxonomies|length > 3 %}
+                                    <span class="tag" style="background:#F1EFEA; color:var(--muted)">+{{ userNews.taxonomies|length - 3 }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <div class="une-card__foot">{{ 'user_news_index.keywords_count'|trans({'%count%': userNews.taxonomies|length}) }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
 {% endblock %}

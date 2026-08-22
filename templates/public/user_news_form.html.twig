@@ -3,16 +3,26 @@
 {% block title %}{{ (isNew ? 'user_news_form.title_new' : 'user_news_form.title_edit')|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
-    <h1>{{ (isNew ? 'user_news_form.title_new' : 'user_news_form.title_edit')|trans }}</h1>
-
-    {{ form_start(form, {attr: {class: 'stacked'}}) }}
-        {{ form_row(form.label) }}
-        {{ form_row(form.taxonomies) }}
-        {% if is_granted('ROLE_ADMIN') %}
-            {{ form_row(form.private) }}
-        {% else %}
-            {{ form_widget(form.private, {attr: {style: 'display:none'}}) }}
-        {% endif %}
-        <p><button type="submit">{{ 'user_news_form.submit'|trans }}</button></p>
-    {{ form_end(form) }}
+    <div class="auth-card" style="max-width:560px">
+        <div class="auth-card__head">
+            <span class="brand__name">{{ (isNew ? 'user_news_form.title_new' : 'user_news_form.title_edit')|trans }}</span>
+            <a href="{{ path('app_my_user_news') }}" style="color:var(--green-soft-2); font-size:13px">← {{ 'my_user_news.title'|trans }}</a>
+        </div>
+        <div style="padding:24px">
+            {{ form_start(form, {attr: {class: 'stacked'}}) }}
+                {{ form_row(form.label) }}
+                {{ form_row(form.taxonomies) }}
+                <p class="form-help" style="margin-top:-8px">{{ 'user_news_form.keywords_hint'|trans }}</p>
+                {% if is_granted('ROLE_ADMIN') %}
+                    {{ form_row(form.private) }}
+                {% else %}
+                    {{ form_widget(form.private, {attr: {style: 'display:none'}}) }}
+                {% endif %}
+                <div class="form-actions">
+                    <button type="submit" class="btn">{{ 'user_news_form.submit'|trans }}</button>
+                    <a class="btn btn-secondary" href="{{ path('app_my_user_news') }}">{{ 'user_news_form.cancel'|trans }}</a>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
 {% endblock %}

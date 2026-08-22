@@ -93,6 +93,87 @@ final class AdminBackofficeTest extends WebTestCase
         self::assertResponseIsSuccessful();
     }
 
+    public function testArticleEditAndDetailPagesRender(): void
+    {
+        $client = $this->bootClientWithSchema();
+        $client->loginUser($this->createAdmin());
+        $this->seedSampleData();
+
+        $article = $this->entityManager->getRepository(Article::class)->findOneBy([]);
+        $article->setImage('https://exemple.com/une.jpg');
+        $this->entityManager->flush();
+
+        $urlGenerator = static::getContainer()->get(AdminUrlGenerator::class);
+
+        // Page d'édition : c'est ici que le champ `image` mal configuré (ImageField sur un
+        // formulaire, sans setUploadDir) levait une exception — le champ image n'apparaît pas
+        // sur l'index, donc le smoke-test d'index ne l'attrapait pas.
+        $client->request('GET', $urlGenerator
+            ->setController(\App\Controller\Admin\ArticleCrudController::class)
+            ->setAction('edit')
+            ->setEntityId($article->getId())
+            ->generateUrl());
+        self::assertResponseIsSuccessful();
+
+        // Page de détail : l'image (URL externe) doit s'afficher sans exigence de répertoire d'upload.
+        $crawler = $client->request('GET', $urlGenerator
+            ->setController(\App\Controller\Admin\ArticleCrudController::class)
+            ->setAction('detail')
+            ->setEntityId($article->getId())
+            ->generateUrl());
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('src="https://exemple.com/une.jpg"', $crawler->filter('body')->html(), "L'URL absolue doit être rendue telle quelle dans la balise <img>, sans préfixe.");
+    }
+
+    public function testTaxonomyDetailPageRendersStatusBadge(): void
+    {
+        $client = $this->bootClientWithSchema();
+        $client->loginUser($this->createAdmin());
+
+        // Statut SUGGESTED par défaut : la fiche détail rend le champ `status` en badge — c'est là
+        // que le mauvais callback de renderAsBadges (getValue() sur la valeur-chaîne) plantait ;
+        // l'index ne déclenche pas ce rendu, d'où le trou dans le smoke-test.
+        $taxonomy = new Taxonomy('petrole', Language::FRENCH);
+        $this->entityManager->persist($taxonomy);
+        $this->entityManager->flush();
+
+        $crawler = $client->request('GET', static::getContainer()->get(AdminUrlGenerator::class)
+            ->setController(\App\Controller\Admin\TaxonomyCrudController::class)
+            ->setAction('detail')
+            ->setEntityId($taxonomy->getId())
+            ->generateUrl());
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('badge', $crawler->filter('body')->html(), 'Le statut doit être rendu comme un badge.');
+    }
+
+    public function testValidatedTaxonomyCanStillBeRejected(): void
+    {
+        $client = $this->bootClientWithSchema();
+        $client->loginUser($this->createAdmin());
+
+        // Taxonomie validée par défaut (comme celles issues du pipeline) : l'action "Rejeter" doit
+        // rester proposée pour un rejet a posteriori.
+        $taxonomy = (new Taxonomy('petrole', Language::FRENCH))->validateAutomatically();
+        $this->entityManager->persist($taxonomy);
+        $this->entityManager->flush();
+        $taxonomyId = $taxonomy->getId();
+
+        $indexUrl = static::getContainer()->get(AdminUrlGenerator::class)
+            ->setController(\App\Controller\Admin\TaxonomyCrudController::class)
+            ->setAction('index')
+            ->generateUrl();
+        $crawler = $client->request('GET', $indexUrl);
+        self::assertResponseIsSuccessful();
+
+        $rejectForm = $crawler->filter('form[action*="/reject"]')->first();
+        self::assertGreaterThan(0, $rejectForm->count(), 'Une taxonomie validée doit rester rejetable.');
+        $client->submit($rejectForm->form());
+
+        $this->entityManager->clear();
+        self::assertSame(TaxonomyStatus::REJECTED, $this->entityManager->getRepository(Taxonomy::class)->find($taxonomyId)->getStatus());
+    }
+
     /** @return iterable<string, array{0: string}> */
     public static function crudControllerProvider(): iterable
     {
@@ -120,19 +201,24 @@ final class AdminBackofficeTest extends WebTestCase
         $this->entityManager->flush();
         $taxonomyId = $taxonomy->getId();
 
-        $crawler = $client->request('GET', '/admin?crudControllerFqcn='.urlencode(\App\Controller\Admin\TaxonomyCrudController::class));
+        // URL d'index « propre » (/admin/taxonomy) et non l'URL legacy ?crudControllerFqcn= :
+        // seule la première rend les actions de ligne (Valider/Rejeter).
+        $indexUrl = static::getContainer()->get(AdminUrlGenerator::class)
+            ->setController(\App\Controller\Admin\TaxonomyCrudController::class)
+            ->setAction('index')
+            ->generateUrl();
+        $crawler = $client->request('GET', $indexUrl);
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('gouvernance', $crawler->filter('body')->text());
 
-        // Simule le clic sur l'action "Valider" (formulaire POST généré par EasyAdmin) : on
-        // reproduit l'URL exacte qu'EasyAdmin génère plutôt que de la deviner.
-        $validateUrl = static::getContainer()->get(AdminUrlGenerator::class)
-            ->setController(\App\Controller\Admin\TaxonomyCrudController::class)
-            ->setAction('validate')
-            ->setEntityId($taxonomyId)
-            ->generateUrl();
-
-        $client->request('POST', $validateUrl);
+        // On soumet le <form> réellement rendu par EasyAdmin pour l'action Valider, au lieu de
+        // POSTer une URL devinée : sa présence (et sa méthode POST) garantit que l'action est bien
+        // rendue en formulaire et non en lien GET — sinon la route, restreinte à POST, renverrait
+        // un 405 au clic (régression corrigée par renderAsForm()).
+        $validateForm = $crawler->filter('form[action*="/validate"]')->first();
+        self::assertGreaterThan(0, $validateForm->count(), "L'action Valider doit être rendue comme un formulaire POST.");
+        self::assertSame('POST', strtoupper($validateForm->attr('method') ?? ''));
+        $client->submit($validateForm->form());
 
         self::assertResponseRedirects();
 

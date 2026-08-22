@@ -1,21 +1,32 @@
 {% extends 'public/base.html.twig' %}
+{% import 'public/_macros.html.twig' as m %}
 
 {% block title %}{{ 'app.site_name'|trans }}{% endblock %}
 
 {% block public_body %}
     {% if featuredArticle %}
-        <article class="article-card" style="border: 1px solid #e5e2da; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-            {% if featuredArticle.image %}
-                <img src="{{ featuredArticle.image }}" alt="" style="width: 220px; height: 150px;">
-            {% endif %}
-            <div>
-                <span class="badge badge-sponsored">{{ 'article_list.sponsored'|trans }}</span>
-                <h2><a href="{{ path('app_article_show', {id: featuredArticle.id, slug: featuredArticle.title|slugify}) }}">{{ featuredArticle.title }}</a></h2>
-                <div class="article-meta">{{ featuredArticle.publicationDate|date('d/m/Y H:i') }}</div>
+        <article class="hero-feature">
+            <a class="hero-feature__media" href="{{ path('app_article_show', {id: featuredArticle.id, slug: featuredArticle.title|slugify}) }}" aria-hidden="true" tabindex="-1">
+                {% if featuredArticle.image %}<img src="{{ featuredArticle.image }}" alt="">{% endif %}
+                <span class="badge badge-sponsored hero-feature__badge">{{ 'article_list.sponsored'|trans }}</span>
+            </a>
+            <div class="hero-feature__body">
+                <div class="article-card__meta">{{ m.article_meta(featuredArticle) }}</div>
+                <h2 class="hero-feature__title"><a href="{{ path('app_article_show', {id: featuredArticle.id, slug: featuredArticle.title|slugify}) }}">{{ featuredArticle.title }}</a></h2>
+                {% if featuredArticle.description %}
+                    <p class="hero-feature__excerpt">{{ featuredArticle.description }}</p>
+                {% endif %}
+                {{ m.keyword_tags(featuredArticle.keywords) }}
             </div>
         </article>
     {% endif %}
 
-    <h1>{{ 'home.latest_articles'|trans }}</h1>
-    {% include 'public/_article_list.html.twig' %}
+    <section class="section">
+        <div class="section-head">
+            <span class="section-title">{{ 'home.latest_articles'|trans }}</span>
+        </div>
+        {% include 'public/_article_list.html.twig' %}
+    </section>
+
+    {% include 'public/_newsletter.html.twig' %}
 {% endblock %}

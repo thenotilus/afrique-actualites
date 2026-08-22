@@ -163,6 +163,6 @@ class Feed
 
     public function __toString(): string
     {
-        return sprintf('%s (%s)', $this->getLabel() ?? '', $this->url);
+        return $this->getLabel();
     }
 }

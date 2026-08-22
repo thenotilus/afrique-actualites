@@ -16,6 +16,7 @@
         "symfony/asset": "6.4.*",
         "symfony/console": "6.4.*",
         "symfony/css-selector": "6.4.*",
+        "symfony/doctrine-messenger": "6.4.*",
         "symfony/dom-crawler": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/flex": "^2",
@@ -80,6 +81,7 @@
         }
     },
     "require-dev": {
+        "deployer/deployer": "^7.5",
         "doctrine/doctrine-fixtures-bundle": "^4.3",
         "friendsofphp/php-cs-fixer": "^3.95",
         "phpunit/phpunit": "^13.3",

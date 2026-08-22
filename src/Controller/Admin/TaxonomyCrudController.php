@@ -74,13 +74,15 @@ class TaxonomyCrudController extends AbstractCrudController
                 array_map(static fn (TaxonomyStatus $status) => $status->label(), TaxonomyStatus::cases()),
                 TaxonomyStatus::cases(),
             ))
-            ->renderAsBadges(static fn ($field) => match ($field->getValue()) {
-                TaxonomyStatus::SUGGESTED => 'warning',
-                TaxonomyStatus::VALIDATED => 'success',
-                TaxonomyStatus::REJECTED => 'danger',
-                TaxonomyStatus::ARCHIVED => 'secondary',
-                default => 'secondary',
-            })
+            // EasyAdmin indexe les badges par la valeur du champ (ici la valeur de l'enum, ex.
+            // "suggested") ; la forme tableau évite le piège du callable, dont le 1er argument est
+            // cette valeur — et non un FieldDto (cf. ChoiceConfigurator::getBadgeVariant).
+            ->renderAsBadges([
+                TaxonomyStatus::SUGGESTED->value => 'warning',
+                TaxonomyStatus::VALIDATED->value => 'success',
+                TaxonomyStatus::REJECTED->value => 'danger',
+                TaxonomyStatus::ARCHIVED->value => 'secondary',
+            ])
             ->setFormTypeOption('disabled', true);
         yield IntegerField::new('mark', 'Score')
             ->setHelp('Calculé par le pipeline de classification : repère de tri, pas une note éditoriale.');
@@ -107,14 +109,22 @@ class TaxonomyCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
+        // renderAsForm() : ces actions modifient l'état (validation/rejet), leurs routes n'acceptent
+        // donc que POST — EasyAdmin doit les rendre en <form method="post"> et non en lien <a> (GET),
+        // sans quoi le clic déclenche un 405 Method Not Allowed.
         $validate = Action::new('validate', 'Valider', 'fa fa-check')
             ->linkToCrudAction('validate')
+            ->renderAsForm()
             ->displayIf(static fn (Taxonomy $taxonomy) => TaxonomyStatus::SUGGESTED === $taxonomy->getStatus())
             ->addCssClass('btn btn-success');
 
+        // Les taxonomies du pipeline étant validées par défaut, "Rejeter" doit rester disponible
+        // sur une taxonomie validée (rejet a posteriori d'un mot-clé indésirable), pas seulement
+        // sur une suggestion : on l'affiche pour toute taxonomie pas déjà rejetée.
         $reject = Action::new('reject', 'Rejeter', 'fa fa-xmark')
             ->linkToCrudAction('reject')
-            ->displayIf(static fn (Taxonomy $taxonomy) => TaxonomyStatus::SUGGESTED === $taxonomy->getStatus())
+            ->renderAsForm()
+            ->displayIf(static fn (Taxonomy $taxonomy) => TaxonomyStatus::REJECTED !== $taxonomy->getStatus())
             ->addCssClass('btn btn-danger');
 
         $batchValidate = Action::new('batchValidate', 'Valider la sélection', 'fa fa-check')
