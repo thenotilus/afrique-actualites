@@ -76,18 +76,23 @@ final class RunClassificationCommandTest extends KernelTestCase
         $feed = new Feed('https://example.com/fr/rss.xml', Language::FRENCH);
         $this->entityManager->persist($feed);
 
-        // Deux articles partagent le terme « réforme » : fréquence documentaire = 2, éligible.
+        // Deux articles partagent le terme « réforme » (fréquence documentaire = 2). Trois articles
+        // de remplissage au vocabulaire distinct portent le lot à cinq, pour que « réforme » reste
+        // sous le plafond de 60 % (2/5 = 40 %) et devienne donc éligible.
         $this->persistArticle($feed, 'Le Nigeria annonce une réforme économique', 'Plan de réforme détaillé');
         $this->persistArticle($feed, 'Réforme économique : le plan confirmé', 'Une réforme jugée ambitieuse');
+        $this->persistArticle($feed, 'Match de football à Dakar', 'Les supporters remplissent le stade');
+        $this->persistArticle($feed, 'Sommet sur le climat à Addis-Abeba', 'Les dirigeants débattent des enjeux');
+        $this->persistArticle($feed, 'Concert de musique à Abidjan', 'Une soirée très attendue par le public');
         $this->entityManager->flush();
 
         $tester = $this->makeTester();
         $exitCode = $tester->execute([]);
 
         self::assertSame(Command::SUCCESS, $exitCode);
-        self::assertStringContainsString('2 article(s) traités', $tester->getDisplay());
+        self::assertStringContainsString('5 article(s) traités', $tester->getDisplay());
 
-        $reforme = $this->taxonomyRepository->findOneByLabelAndLanguage('reform', Language::FRENCH);
+        $reforme = $this->taxonomyRepository->findOneByLabelAndLanguage('reforme', Language::FRENCH);
         self::assertNotNull($reforme, 'Un terme récurrent de la fenêtre devient une taxonomie.');
         self::assertSame(TaxonomyStatus::VALIDATED, $reforme->getStatus());
     }
@@ -115,7 +120,7 @@ final class RunClassificationCommandTest extends KernelTestCase
 
         self::assertSame(Command::SUCCESS, $exitCode);
         self::assertStringContainsString('rien à classer', $tester->getDisplay());
-        self::assertNull($this->taxonomyRepository->findOneByLabelAndLanguage('reform', Language::FRENCH));
+        self::assertNull($this->taxonomyRepository->findOneByLabelAndLanguage('reforme', Language::FRENCH));
     }
 
     public function testRejectsNonNumericWindow(): void
