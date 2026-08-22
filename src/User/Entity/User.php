@@ -21,7 +21,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * App\Newsletter\Entity\NewsletterSubscriber, un modèle volontairement distinct).
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`')]
+#[ORM\Table(name: 'sf_user')]
 #[ORM\UniqueConstraint(name: 'uniq_user_email', columns: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {

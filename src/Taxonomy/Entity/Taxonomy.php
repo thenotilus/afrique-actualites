@@ -22,6 +22,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * propre espace de taxonomies.
  */
 #[ORM\Entity(repositoryClass: TaxonomyRepository::class)]
+#[ORM\Table(name: 'sf_taxonomy')]
 #[UniqueEntity(fields: ['label', 'language'], message: 'Cette taxonomie existe déjà dans cette langue.')]
 class Taxonomy
 {

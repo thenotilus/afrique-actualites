@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
  * domaine bloque systématiquement tous les profils).
  */
 #[ORM\Entity(repositoryClass: CrawlAttemptRepository::class)]
+#[ORM\Table(name: 'sf_crawl_attempt')]
 class CrawlAttempt
 {
     #[ORM\Id]

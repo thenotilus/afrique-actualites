@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * plusieurs "Unes".
  */
 #[ORM\Entity(repositoryClass: PublicationRepository::class)]
+#[ORM\Table(name: 'sf_publication')]
 class Publication
 {
     #[ORM\Id]
@@ -40,7 +41,7 @@ class Publication
 
     /** @var Collection<int, UserNews> */
     #[ORM\ManyToMany(targetEntity: UserNews::class, inversedBy: 'publications')]
-    #[ORM\JoinTable(name: 'publication_user_news')]
+    #[ORM\JoinTable(name: 'sf_publication_user_news')]
     private Collection $newsList;
 
     public function __construct(string $title, string $content)

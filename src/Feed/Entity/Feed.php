@@ -15,6 +15,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * Flux RSS/Atom d'un média partenaire.
  */
 #[ORM\Entity(repositoryClass: FeedRepository::class)]
+#[ORM\Table(name: 'sf_feed')]
 #[UniqueEntity('urlHash', message: 'Ce flux est déjà enregistré.')]
 class Feed
 {

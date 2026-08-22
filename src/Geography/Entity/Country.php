@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
  * associés, un simple détour), le rattachement aux articles est natif — voir `Article::$countries`.
  */
 #[ORM\Entity(repositoryClass: CountryRepository::class)]
+#[ORM\Table(name: 'sf_country')]
 class Country
 {
     #[ORM\Id]

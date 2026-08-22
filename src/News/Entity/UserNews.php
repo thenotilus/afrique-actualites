@@ -14,6 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
  * veille listant les articles associés à au moins un de ces mots-clés.
  */
 #[ORM\Entity(repositoryClass: UserNewsRepository::class)]
+#[ORM\Table(name: 'sf_user_news')]
 class UserNews
 {
     #[ORM\Id]
@@ -32,7 +33,7 @@ class UserNews
 
     /** @var Collection<int, Taxonomy> Uniquement des taxonomies VALIDATED, voir §10.4. */
     #[ORM\ManyToMany(targetEntity: Taxonomy::class)]
-    #[ORM\JoinTable(name: 'user_news_taxonomy')]
+    #[ORM\JoinTable(name: 'sf_user_news_taxonomy')]
     private Collection $taxonomies;
 
     /** @var Collection<int, Publication> */

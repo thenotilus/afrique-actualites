@@ -18,6 +18,7 @@ use Doctrine\ORM\Mapping as ORM;
  * vraies colonnes et de vraies relations, plus faciles à faire évoluer et à interroger.
  */
 #[ORM\Entity(repositoryClass: WeeklyNewsletterRepository::class)]
+#[ORM\Table(name: 'sf_weekly_newsletter')]
 class WeeklyNewsletter
 {
     #[ORM\Id]
@@ -36,12 +37,12 @@ class WeeklyNewsletter
 
     /** @var Collection<int, Taxonomy> */
     #[ORM\ManyToMany(targetEntity: Taxonomy::class)]
-    #[ORM\JoinTable(name: 'weekly_newsletter_taxonomy')]
+    #[ORM\JoinTable(name: 'sf_weekly_newsletter_taxonomy')]
     private Collection $keywords;
 
     /** @var Collection<int, Article> */
     #[ORM\ManyToMany(targetEntity: Article::class)]
-    #[ORM\JoinTable(name: 'weekly_newsletter_article')]
+    #[ORM\JoinTable(name: 'sf_weekly_newsletter_article')]
     private Collection $articles;
 
     #[ORM\Column]
@@ -49,7 +50,7 @@ class WeeklyNewsletter
 
     /** @var Collection<int, NewsletterSubscriber> Pertinent seulement si allSubscribers = false. */
     #[ORM\ManyToMany(targetEntity: NewsletterSubscriber::class)]
-    #[ORM\JoinTable(name: 'weekly_newsletter_subscriber')]
+    #[ORM\JoinTable(name: 'sf_weekly_newsletter_subscriber')]
     private Collection $targetedSubscribers;
 
     #[ORM\Column]

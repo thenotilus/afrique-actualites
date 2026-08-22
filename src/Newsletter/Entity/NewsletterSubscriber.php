@@ -17,6 +17,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * dans ce sens.
  */
 #[ORM\Entity(repositoryClass: NewsletterSubscriberRepository::class)]
+#[ORM\Table(name: 'sf_newsletter_subscriber')]
 #[UniqueEntity('email')]
 class NewsletterSubscriber
 {

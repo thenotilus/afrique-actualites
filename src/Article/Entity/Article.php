@@ -17,6 +17,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * Article agrégé depuis un flux (ou soumis manuellement par URL).
  */
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
+#[ORM\Table(name: 'sf_article')]
 #[UniqueEntity('urlHash', message: 'Cet article est déjà enregistré.')]
 class Article
 {
@@ -65,7 +66,7 @@ class Article
      * @var Collection<int, Taxonomy>
      */
     #[ORM\ManyToMany(targetEntity: Taxonomy::class, inversedBy: 'articles')]
-    #[ORM\JoinTable(name: 'article_taxonomy')]
+    #[ORM\JoinTable(name: 'sf_article_taxonomy')]
     private Collection $taxonomies;
 
     /**
@@ -76,7 +77,7 @@ class Article
      * @var Collection<int, Taxonomy>
      */
     #[ORM\ManyToMany(targetEntity: Taxonomy::class, inversedBy: 'keywordArticles')]
-    #[ORM\JoinTable(name: 'article_keyword')]
+    #[ORM\JoinTable(name: 'sf_article_keyword')]
     private Collection $keywords;
 
     /**
@@ -87,7 +88,7 @@ class Article
      * @var Collection<int, Country>
      */
     #[ORM\ManyToMany(targetEntity: Country::class, inversedBy: 'articles')]
-    #[ORM\JoinTable(name: 'article_country')]
+    #[ORM\JoinTable(name: 'sf_article_country')]
     private Collection $countries;
 
     public function __construct(string $title, string $url, Feed $feed, \DateTimeImmutable $publicationDate)
