@@ -75,3 +75,34 @@ services:
         arguments:
             $userAgent: '%feed.user_agent%'
             $requestTimeout: '%feed.request_timeout%'
+
+    # Synthèses hebdomadaires par pays/région : clustering thématique et fournisseur LLM derrière
+    # des interfaces (même logique que le pipeline de classification ci-dessus), remplaçables sans
+    # toucher à l'orchestration (`App\Synthesis\SynthesisGenerator`).
+    App\Synthesis\Pipeline\ThemeClassifierInterface: '@App\Synthesis\Pipeline\KeywordDictionaryThemeClassifier'
+    App\Synthesis\Llm\LlmClientInterface: '@App\Synthesis\Llm\OvhCloudAiEndpointsClient'
+
+    App\Synthesis\Pipeline\KeywordDictionaryThemeClassifier:
+        arguments:
+            $resourcesDirectory: '%kernel.project_dir%/src/Synthesis/Resources/themes'
+
+    App\Synthesis\Llm\OvhCloudAiEndpointsClient:
+        arguments:
+            $baseUrl: '%synthesis.llm.base_url%'
+            $apiToken: '%env(OVH_AI_ENDPOINTS_TOKEN)%'
+
+    App\Synthesis\WeeklySelector:
+        arguments:
+            $minArticlesPerCountry: '%synthesis.min_articles_per_country%'
+
+    App\Synthesis\ClusterSummarizer:
+        arguments:
+            $model: '%synthesis.llm.map_model%'
+
+    App\Synthesis\SynthesisAssembler:
+        arguments:
+            $model: '%synthesis.llm.reduce_model%'
+
+    App\Synthesis\SynthesisGenerator:
+        arguments:
+            $autoPublish: '%synthesis.auto_publish%'

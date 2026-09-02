@@ -73,6 +73,13 @@ country_show:
     recent: "Récent"
     archives: "Archives"
     all_archives: "Toutes les archives"
+    syntheses_title: "Synthèses hebdomadaires"
+
+synthesis_show:
+    breadcrumb_current: "Synthèse hebdomadaire"
+    eyebrow: "Synthèse hebdomadaire"
+    week: "Semaine du %start% au %end%"
+    sources: "Articles sources"
 
 search:
     title: "Recherche"

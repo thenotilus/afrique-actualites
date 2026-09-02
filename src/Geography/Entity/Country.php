@@ -3,6 +3,7 @@
 namespace App\Geography\Entity;
 
 use App\Article\Entity\Article;
+use App\Geography\Enum\Region;
 use App\Geography\Repository\CountryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -35,6 +36,14 @@ class Country
 
     #[ORM\Column]
     private bool $active = false;
+
+    /**
+     * Région de repli pour les synthèses hebdomadaires (§ "Nouvelle table syntheses") : nullable
+     * car alimentée après coup par `app:country:fill` depuis `countries.yaml`, pas au moment de
+     * la construction (§10.1.6, un pays peut déjà exister en base avant l'ajout de ce champ).
+     */
+    #[ORM\Column(enumType: Region::class, nullable: true)]
+    private ?Region $region = null;
 
     /** @var Collection<int, Article> */
     #[ORM\ManyToMany(targetEntity: Article::class, mappedBy: 'countries')]
@@ -97,6 +106,18 @@ class Country
     public function setActive(bool $active): static
     {
         $this->active = $active;
+
+        return $this;
+    }
+
+    public function getRegion(): ?Region
+    {
+        return $this->region;
+    }
+
+    public function setRegion(?Region $region): static
+    {
+        $this->region = $region;
 
         return $this;
     }

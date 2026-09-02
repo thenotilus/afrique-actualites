@@ -1,0 +1,132 @@
+# English theme dictionary — mirrors fr.yaml (see its header comment). Keyed by
+# `App\Synthesis\Enum\Theme` value, matched after normalization (lowercase, no diacritics).
+elections:
+    - election
+    - elections
+    - electoral
+    - ballot
+    - candidate
+    - candidacy
+    - presidential election
+    - parliamentary election
+    - referendum
+    - vote
+    - voters
+
+diplomatie:
+    - diplomacy
+    - diplomatic
+    - summit
+    - embassy
+    - ambassador
+    - bilateral relations
+    - african union
+    - ecowas
+    - united nations
+    - treaty
+    - peace agreement
+    - mediation
+    - cooperation
+
+economie:
+    - economy
+    - economic
+    - growth
+    - inflation
+    - budget
+    - imf
+    - world bank
+    - investment
+    - export
+    - import
+    - oil
+    - agriculture
+    - currency
+    - cfa franc
+    - debt
+    - trade
+    - jobs
+    - unemployment
+    - business
+    - market
+
+securite:
+    - security
+    - attack
+    - terrorism
+    - terrorist
+    - army
+    - military
+    - insurgency
+    - jihadist
+    - armed conflict
+    - violence
+    - rebels
+    - coup
+    - armed forces
+    - insecurity
+
+justice:
+    - justice
+    - court
+    - trial
+    - conviction
+    - convicted
+    - arrest
+    - corruption
+    - judicial investigation
+    - magistrate
+    - constitutional court
+    - detention
+    - indicted
+
+societe:
+    - society
+    - protest
+    - strike
+    - union
+    - education
+    - school
+    - university
+    - religion
+    - human rights
+    - poverty
+    - migration
+    - migrants
+    - refugees
+
+sante:
+    - health
+    - hospital
+    - epidemic
+    - vaccine
+    - vaccination
+    - disease
+    - virus
+    - ministry of health
+    - healthcare
+
+environnement:
+    - environment
+    - climate
+    - drought
+    - flood
+    - flooding
+    - biodiversity
+    - deforestation
+    - pollution
+    - renewable energy
+
+culture_sport:
+    - culture
+    - festival
+    - music
+    - film
+    - football
+    - soccer
+    - africa cup of nations
+    - championship
+    - athlete
+    - national team
+    - museum
+    - heritage

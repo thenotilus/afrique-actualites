@@ -172,6 +172,20 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * Restreint une requête à une fenêtre [début, fin[ (synthèses hebdomadaires, §
+     * "Sélection et regroupement" — `App\Synthesis\WeeklySelector`). Même logique d'intervalle
+     * demi-ouvert que {@see byMonth()}, pour la même raison de portabilité.
+     */
+    public function betweenDates(QueryBuilder $queryBuilder, \DateTimeImmutable $start, \DateTimeImmutable $end): QueryBuilder
+    {
+        return $queryBuilder
+            ->andWhere('a.publicationDate >= :weekStart')
+            ->andWhere('a.publicationDate < :weekEnd')
+            ->setParameter('weekStart', $start)
+            ->setParameter('weekEnd', $end);
+    }
+
+    /**
      * Mois pour lesquels le pays a au moins un article publié dans la langue donnée, du plus
      * récent au plus ancien (grille d'archives, parcours 1.E). `SUBSTRING` sur la date-heure
      * renvoie « YYYY-MM » côté MySQL ; on regroupe dessus pour éviter de charger toutes les lignes.

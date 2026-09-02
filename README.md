@@ -118,6 +118,33 @@ a été redéfinie** : l'ancienne application n'étant plus en exploitation, le 
 initialement prévu n'est plus possible — voir §11.2 de la documentation fonctionnelle pour
 l'approche de validation/bascule de remplacement.
 
+**Synthèses hebdomadaires par pays** (chantier hors des 9 phases ci-dessus, indépendant de la
+newsletter en pause) :
+
+- [x] Entité `Synthesis` (`src/Synthesis/`), rattachée à un pays ou, à défaut, à une région de
+      repli (`Geography\Enum\Region`, colonne `Country::$region`) — jamais les deux
+- [x] Pipeline sélection (`WeeklySelector`, seuil de 5 articles/semaine, `synthesis.yaml`) →
+      clustering par sous-thème (`ArticleClusterer`, dictionnaire de mots-clés éditable — choix
+      documenté dans `KeywordDictionaryThemeClassifier`) → résumé par cluster, map
+      (`ClusterSummarizer`) → assemblage, reduce (`SynthesisAssembler`) ; fournisseur LLM API
+      OVHcloud AI Endpoints derrière `LlmClientInterface` (remplaçable)
+- [x] Commande `app:synthesis:generate`, cadencée par le crontab (lundi 00h30, indépendant de
+      Deployer) ; flag `AUTO_PUBLISH` (défaut `false`) pour basculer plus tard vers la publication
+      automatique sans réécrire le pipeline
+- [x] Écran de relecture back-office (`SynthesisCrudController`) : brouillon → publier/rejeter,
+      articles sources pour traçabilité
+- [x] Page publique `/fr/synthese/{pays|région}/{semaine}`, liée depuis la page pays
+- [x] Tests (`tests/Synthesis/`, `tests/Controller/SynthesisControllerTest.php`,
+      `tests/Controller/Admin/SynthesisCrudControllerTest.php`) : clustering, sélection/repli
+      régional, pipeline bout en bout (idempotence, auto-publication), back-office, page publique
+- [ ] Migration Doctrine écrite à la main (`migrations/Version20260902060000.php`) faute de base
+      MySQL joignable dans cet environnement — mapping validé par `doctrine:schema:validate`
+      contre SQLite (même limitation que la dette déjà notée ci-dessus) ; à confirmer/régénérer
+      avec `doctrine:migrations:diff` dès qu'une base MySQL 8 est joignable
+- [ ] Identifiants de modèle OVHcloud AI Endpoints (`OVH_AI_ENDPOINTS_MAP_MODEL`/`_REDUCE_MODEL`)
+      et jeton (`OVH_AI_ENDPOINTS_TOKEN`) à renseigner en production selon le catalogue réellement
+      disponible sur le compte utilisé
+
 ## Démarrage local
 
 Prérequis : PHP 8.2+, Composer, Docker (pour la base de données).

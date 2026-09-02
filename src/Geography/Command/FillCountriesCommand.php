@@ -3,6 +3,7 @@
 namespace App\Geography\Command;
 
 use App\Geography\Entity\Country;
+use App\Geography\Enum\Region;
 use App\Geography\Repository\CountryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -36,16 +37,19 @@ final class FillCountriesCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        /** @var list<array{code: string, name_fr: string, name_en: string}> $countries */
+        /** @var list<array{code: string, name_fr: string, name_en: string, region: string}> $countries */
         $countries = Yaml::parseFile(self::RESOURCE_PATH) ?? [];
 
         $created = 0;
         $updated = 0;
 
         foreach ($countries as $data) {
+            $region = Region::from($data['region']);
+
             $country = $this->countryRepository->findOneByCode($data['code']);
             if (null === $country) {
                 $country = new Country($data['code'], $data['name_fr'], $data['name_en']);
+                $country->setRegion($region);
                 $this->entityManager->persist($country);
                 ++$created;
 
@@ -54,6 +58,7 @@ final class FillCountriesCommand extends Command
 
             $country->setNameFr($data['name_fr']);
             $country->setNameEn($data['name_en']);
+            $country->setRegion($region);
             ++$updated;
         }
 
