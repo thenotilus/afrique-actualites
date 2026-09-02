@@ -1,0 +1,141 @@
+# Dictionnaire thématique français (§ "Clustering par sous-thème"). Chaque clé est la valeur
+# d'un cas de `App\Synthesis\Enum\Theme` ; chaque entrée est un mot ou une courte expression
+# recherchée (insensible aux accents/majuscules, comparée après le même `NormalizerInterface` que
+# le reste du pipeline de classification) dans le titre + chapô d'un article. Modifiable sans
+# toucher au code, à l'image de Classification/Resources/stopwords/.
+elections:
+    - élection
+    - élections
+    - électoral
+    - électorale
+    - scrutin
+    - urnes
+    - candidat
+    - candidature
+    - présidentielle
+    - législatives
+    - référendum
+    - vote
+    - votants
+
+diplomatie:
+    - diplomatie
+    - diplomatique
+    - sommet
+    - ambassade
+    - ambassadeur
+    - relations bilatérales
+    - union africaine
+    - cedeao
+    - onu
+    - nations unies
+    - traité
+    - accord de paix
+    - médiation
+    - coopération
+
+economie:
+    - économie
+    - économique
+    - croissance
+    - inflation
+    - budget
+    - fmi
+    - banque mondiale
+    - investissement
+    - exportation
+    - importation
+    - pétrole
+    - agriculture
+    - monnaie
+    - franc cfa
+    - dette
+    - commerce
+    - emploi
+    - chômage
+    - entreprise
+    - marché
+
+securite:
+    - sécurité
+    - attaque
+    - attentat
+    - terrorisme
+    - terroriste
+    - armée
+    - militaire
+    - insurrection
+    - djihadiste
+    - conflit armé
+    - violences
+    - rebelles
+    - coup d'état
+    - putsch
+    - forces armées
+    - insécurité
+
+justice:
+    - justice
+    - tribunal
+    - procès
+    - condamnation
+    - condamné
+    - arrestation
+    - corruption
+    - enquête judiciaire
+    - magistrat
+    - cour constitutionnelle
+    - détention
+    - inculpé
+
+societe:
+    - société
+    - manifestation
+    - grève
+    - syndicat
+    - éducation
+    - école
+    - université
+    - religion
+    - droits humains
+    - pauvreté
+    - migration
+    - migrants
+    - réfugiés
+
+sante:
+    - santé
+    - hôpital
+    - épidémie
+    - vaccin
+    - vaccination
+    - maladie
+    - virus
+    - ministère de la santé
+    - soins
+
+environnement:
+    - environnement
+    - climat
+    - climatique
+    - sécheresse
+    - inondation
+    - inondations
+    - biodiversité
+    - déforestation
+    - pollution
+    - énergie renouvelable
+
+culture_sport:
+    - culture
+    - festival
+    - musique
+    - cinéma
+    - football
+    - can
+    - coupe d'afrique
+    - championnat
+    - athlète
+    - équipe nationale
+    - musée
+    - patrimoine

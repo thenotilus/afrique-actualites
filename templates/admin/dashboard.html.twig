@@ -33,6 +33,20 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3 border-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Synthèses hebdomadaires en attente</h5>
+                    <p class="display-6">{{ pendingSynthesesCount }}</p>
+                    <a href="{{ ea_url().setController('App\\Controller\\Admin\\SynthesisCrudController').generateUrl() }}" class="btn btn-warning">
+                        Relire les brouillons
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if pendingSuggestions|length > 0 %}
         <h5 class="mt-4">Dernières suggestions</h5>
         <table class="table table-striped">

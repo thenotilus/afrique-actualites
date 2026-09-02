@@ -10,3 +10,9 @@
 # Le worker s'arrête toutes les 5 minutes (--time-limit=300) pour éviter les fuites mémoire,
 # et le cron le relance immédiatement.
 */5 * * * * cd {{deploy_path}}/current && flock -n var/cron-messenger.lock php bin/console messenger:consume async --time-limit=300 --no-interaction >> var/log/messenger.cron.log 2>&1
+
+# Synthèses hebdomadaires par pays/région (§ "Scheduling") : lundi 00:30, une fois la semaine
+# Lun-Dim écoulée. Indépendant du pipeline de déploiement Deployer — ce cron exécute une tâche
+# applicative récurrente, pas un déploiement de code. Chaque synthèse est créée en brouillon
+# (workflow de validation humaine dans le back-office), sauf si AUTO_PUBLISH=true.
+30 0 * * 1 cd {{deploy_path}}/current && flock -n var/cron-synthesis.lock php bin/console app:synthesis:generate --no-interaction >> var/log/synthesis.cron.log 2>&1

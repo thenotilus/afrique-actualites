@@ -1,0 +1,44 @@
+{% extends 'public/base.html.twig' %}
+
+{% block title %}{{ synthesis.title }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block mobile_title %}{{ 'synthesis_show.breadcrumb_current'|trans }}{% endblock %}
+
+{% block public_body %}
+    <article class="article-detail">
+        <div class="breadcrumb">
+            <a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a>
+            {% if synthesis.country %}
+                · <a href="{{ path('app_country_show', {code: synthesis.country.code}) }}">{{ app.request.locale == 'en' ? synthesis.country.nameEn : synthesis.country.nameFr }}</a>
+            {% endif %}
+            · <span class="current">{{ 'synthesis_show.breadcrumb_current'|trans }}</span>
+        </div>
+
+        <div>
+            <p><span class="badge">{{ 'synthesis_show.eyebrow'|trans }}</span></p>
+            <h1 class="article-detail__title">{{ synthesis.title }}</h1>
+        </div>
+
+        <div class="article-detail__meta">
+            <span>{{ synthesis.scopeLabel }}</span><span>·</span>
+            <span>{{ 'synthesis_show.week'|trans({'%start%': synthesis.weekStart|date('d/m/Y'), '%end%': synthesis.weekEnd|date('d/m/Y')}) }}</span>
+        </div>
+
+        {% if synthesis.lead %}
+            <div class="prose"><p class="lead">{{ synthesis.lead }}</p></div>
+        {% endif %}
+
+        <div class="prose">{{ synthesis.body|raw }}</div>
+
+        {% if synthesis.sourceArticles|length > 0 %}
+            <div class="section" style="margin-top:24px">
+                <span class="eyebrow">{{ 'synthesis_show.sources'|trans }}</span>
+                <ul class="source-list">
+                    {% for article in synthesis.sourceArticles %}
+                        <li><a href="{{ path('app_article_show', {id: article.id}) }}">{{ article.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </article>
+{% endblock %}

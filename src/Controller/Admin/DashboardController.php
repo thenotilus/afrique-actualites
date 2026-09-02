@@ -5,6 +5,8 @@ namespace App\Controller\Admin;
 use App\Article\Entity\Article;
 use App\Crawler\Repository\CrawlAttemptRepository;
 use App\Feed\Entity\Feed;
+use App\Synthesis\Entity\Synthesis;
+use App\Synthesis\Enum\SynthesisStatus;
 use App\Taxonomy\Entity\Taxonomy;
 use App\Taxonomy\Enum\TaxonomyStatus;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,6 +42,8 @@ class DashboardController extends AbstractDashboardController
             'activeFeedsCount' => $this->entityManager->getRepository(Feed::class)->count(['active' => true]),
             'recentArticlesCount' => $this->entityManager->getRepository(Article::class)->count([]),
             'crawlSuccessRateByDomain' => $this->crawlAttemptRepository->successRateByDomain(),
+            'pendingSynthesesCount' => $this->entityManager->getRepository(Synthesis::class)
+                ->count(['status' => SynthesisStatus::DRAFT]),
         ]);
     }
 
@@ -75,6 +79,9 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Newsletter');
         yield MenuItem::linkTo(WeeklyNewsletterCrudController::class, 'Newsletters hebdomadaires', 'fa fa-envelope-open-text');
         yield MenuItem::linkTo(NewsletterSubscriberCrudController::class, 'Abonnés', 'fa fa-at');
+
+        yield MenuItem::section('Synthèses');
+        yield MenuItem::linkTo(SynthesisCrudController::class, 'Synthèses hebdomadaires', 'fa fa-scroll');
 
         yield MenuItem::section('Utilisateurs');
         yield MenuItem::linkTo(UserCrudController::class, 'Comptes utilisateurs', 'fa fa-users');

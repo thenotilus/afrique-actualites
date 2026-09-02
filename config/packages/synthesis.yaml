@@ -1,0 +1,25 @@
+parameters:
+    # Seuil minimal d'articles d'un pays sur la semaine pour une synthèse dédiée (§ "Sélection et
+    # regroupement") ; en dessous, ses articles rejoignent le repli régional de son
+    # `Country::$region` (voir `App\Synthesis\WeeklySelector`).
+    synthesis.min_articles_per_country: 5
+
+    # Flag de bascule vers la publication 100% automatique (§ "Workflow de validation") : tant
+    # qu'il reste à `false` (défaut), chaque synthèse générée par `app:synthesis:generate` reste au
+    # statut brouillon en attente de relecture dans le back-office. À activer une fois le pipeline
+    # fiabilisé sur plusieurs semaines, sans toucher au code.
+    synthesis.auto_publish: '%env(bool:AUTO_PUBLISH)%'
+
+    # API OVHcloud AI Endpoints (fournisseur LLM retenu, voir `OvhCloudAiEndpointsClient`) :
+    # passerelle compatible OpenAI et identifiants de modèle du catalogue AI Endpoints du compte
+    # utilisé. Le jeton (`OVH_AI_ENDPOINTS_TOKEN`) est un secret — jamais défini ici ni dans .env,
+    # seulement dans .env.local ou les secrets de production (cf. .env, "DO NOT DEFINE PRODUCTION
+    # SECRETS").
+    #
+    # Modèle recommandé (§ "Résumé par cluster") : un modèle plus léger/rapide pour le map (un
+    # appel par cluster de sous-thème, potentiellement nombreux) et un modèle plus capable pour le
+    # reduce (un seul appel par synthèse, qui doit produire un titre et un chapô cohérents avec
+    # l'ensemble des clusters).
+    synthesis.llm.base_url: '%env(OVH_AI_ENDPOINTS_BASE_URL)%'
+    synthesis.llm.map_model: '%env(OVH_AI_ENDPOINTS_MAP_MODEL)%'
+    synthesis.llm.reduce_model: '%env(OVH_AI_ENDPOINTS_REDUCE_MODEL)%'

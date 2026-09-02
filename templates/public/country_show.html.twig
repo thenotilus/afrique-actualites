@@ -10,6 +10,7 @@
 {% set showArchives = showArchives|default(false) %}
 {% set activeMonth = activeMonth|default(null) %}
 {% set archiveYears = archiveYears|default({}) %}
+{% set syntheses = syntheses|default([]) %}
 {% set month_names = app.request.locale == 'en'
     ? ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     : ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'] %}
@@ -25,6 +26,19 @@
             </div>
         </div>
     </div>
+
+    {% if not keyword and not showArchives and syntheses|length > 0 %}
+        <div class="section">
+            <div class="section-head">
+                <span class="section-title">{{ 'country_show.syntheses_title'|trans }}</span>
+            </div>
+            <div class="tags">
+                {% for synthesis in syntheses %}
+                    <a class="tag tag--outline" href="{{ path('app_synthesis_show', {scope: synthesis.urlScope, semaine: synthesis.weekStart|date('Y-m-d')}) }}">{{ synthesis.title }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 
     {% if archiveYears|length > 0 %}
         <div class="tabs">

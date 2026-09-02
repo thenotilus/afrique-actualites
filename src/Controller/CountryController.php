@@ -6,6 +6,7 @@ use App\Article\Repository\ArticleRepository;
 use App\Geography\Repository\CountryRepository;
 use App\Shared\Pagination\QueryPaginator;
 use App\Shared\ValueObject\Language;
+use App\Synthesis\Repository\SynthesisRepository;
 use App\Taxonomy\Repository\TaxonomyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,7 +40,7 @@ class CountryController extends AbstractController
     }
 
     #[Route('/pays/{code}', name: 'app_country_show')]
-    public function show(Request $request, TaxonomyRepository $taxonomyRepository, string $code): Response
+    public function show(Request $request, TaxonomyRepository $taxonomyRepository, SynthesisRepository $synthesisRepository, string $code): Response
     {
         $country = $this->countryRepository->findOneByCode(strtoupper($code));
         if (null === $country || !$country->isActive()) {
@@ -77,6 +78,7 @@ class CountryController extends AbstractController
             'archiveYears' => $archiveYears,
             'activeMonth' => $activeMonth,
             'showArchives' => 'archives' === $request->query->get('view') || null !== $activeMonth,
+            'syntheses' => $synthesisRepository->findPublishedForCountry($country, $language),
         ]);
     }
 
