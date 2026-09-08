@@ -6,3 +6,9 @@ parameters:
 
     # Délai d'attente (secondes) de la requête HTTP de récupération d'un flux.
     feed.request_timeout: 10.0
+
+    # Garde-fou du backfill historique (§6bis, `app:feed:backfill`) : nombre maximum de documents
+    # sitemap (index et feuilles confondus) suivis par média avant d'arrêter la récupération —
+    # évite qu'une arborescence de sitemaps démesurée ou une référence circulaire ne bloque la
+    # commande indéfiniment.
+    feed.backfill_max_sitemaps: 200

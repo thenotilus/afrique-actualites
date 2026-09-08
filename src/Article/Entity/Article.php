@@ -60,6 +60,15 @@ class Article
     private bool $shared = false;
 
     /**
+     * Instant du partage effectif (`App\Social\FacebookPublisher`, §3.8). Sert de fenêtre à la
+     * logique anti-répétition de {@see ArticleRepository::findNextToShare()}
+     * (exclut les mots-clés déjà partagés dans les 6 dernières heures) : `shared` seul ne suffit
+     * pas à borner cette fenêtre dans le temps.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $sharedAt = null;
+
+    /**
      * Toutes les taxonomies extraites du contenu, y compris celles qui ne sont encore que des
      * suggestions en attente de validation (§4.4). Ne pas utiliser pour l'affichage public.
      *
@@ -228,9 +237,16 @@ class Article
         return $this->shared;
     }
 
-    public function setShared(bool $shared): static
+    public function getSharedAt(): ?\DateTimeImmutable
     {
-        $this->shared = $shared;
+        return $this->sharedAt;
+    }
+
+    /** Marque l'article comme partagé à l'instant donné (toujours les deux ensemble, §3.8). */
+    public function markShared(\DateTimeImmutable $sharedAt): static
+    {
+        $this->shared = true;
+        $this->sharedAt = $sharedAt;
 
         return $this;
     }

@@ -172,10 +172,11 @@ confirmer précisément, voir §12).
 
 ### 3.8 Partage sur les réseaux sociaux
 
-**Réponse du porteur produit :** cette fonctionnalité **sera implémentée ultérieurement**, dans une
-phase postérieure au lot initial de la refonte (voir §11.2, phase 9). Elle n'est donc pas à
-développer dans un premier temps, mais les interfaces du module `Social/` (§9.2) doivent rester
-prévues pour ne pas bloquer son branchement futur.
+**Mise à jour produit :** le volet **Facebook** de cette fonctionnalité a été avancé et est
+**implémenté** (voir §11.2, phase 9 — désormais partielle) : `App\Social\FacebookPublisher` publie
+sur la Page via l'API Graph, orchestré par la commande `app:articles:share` (cron toutes les 20
+minutes, un seul article par exécution, cf. crontab). Le volet **Twitter** reste différé — seule
+l'interface d'extension du module `Social/` (§9.2) est posée pour lui, comme initialement prévu.
 
 - **Commande** `app:articles:share` (`ShareCommand`) : sélectionne un article "à partager"
   (`ArticleService::getArticleToShare`) selon une logique d'anti-répétition (exclut les mots-clés
@@ -436,7 +437,7 @@ recommandation ci-dessous.
 |---|---|---|
 | `app:articles:extract` | Extraction des articles des flux actifs, puis enchaîne sur la classification | **Continue** (boucle continue en production) |
 | `app:articles:classify` | Classification/attribution des mots-clés sur les N dernières heures | **Continue** (idem) |
-| `app:articles:share` | Sélection d'un article à partager sur les réseaux sociaux | Fonctionnalité différée (§3.8) — fréquence cible à définir lors de sa réactivation |
+| `app:articles:share` | Sélection et publication d'un article sur la Page Facebook (§3.8) | **Toutes les 20 minutes** (cron, un seul article par exécution) |
 | `app:articles:daily` | Envoi d'un résumé quotidien par email (SendinBlue) | **Abandonnée** (§3.7), non reprise dans la refonte |
 | `app:country:fill` | Peuplement du référentiel pays depuis un YAML statique | Ponctuelle / à l'installation |
 
@@ -767,7 +768,7 @@ métadonnées.
 | 6. Modules front (bilingues) | Réécriture des "Unes" utilisateur, de la page **"actualité par pays"** (croisement pays × mot-clé + archives paginées, §3.13), de la recherche et du SEO/sitemap ; interface publique bilingue FR/EN avec sélecteur de langue | Pages publiques fonctionnelles sur le nouveau socle | Phases 3, 4 |
 | 7. *(en pause)* Newsletter hebdomadaire | Réécriture de l'envoi hebdomadaire (SendinBlue) sur le corpus de mots-clés validés, avec gestion d'une liste d'abonnés dédiée (~40 destinataires actuels, §3.7) — la newsletter quotidienne **n'est pas reprise** | Commande/handler Messenger dédié | Phase 6 — **mise en attente décidée par le porteur produit** (voir note ci-dessous) |
 | 8. Validation & bascule | L'ancienne application (`thenotilus/afkr`) **n'est plus en exploitation** : le double-run ancien/nouveau système initialement prévu (exécution en parallèle, comparaison des résultats d'extraction/classification) n'est donc plus possible faute de système de référence actif à comparer. La validation avant bascule doit s'appuyer sur d'autres moyens : réindexation du corpus historique déjà importé (§11.2 phase 2) avec le nouveau pipeline et revue éditoriale par échantillonnage, plutôt qu'une comparaison automatisée en continu. Reste à clarifier avec le porteur produit (voir §12.2) : dispose-t-on d'un export/sauvegarde de la base de l'ancienne application à des fins de comparaison ponctuelle, et quel est le plan de secours en cas de problème après bascule, sachant qu'un retour à l'ancien système n'est plus une option de repli immédiate | Plan de validation par échantillonnage, plan de bascule, procédure de secours (sans retour à l'ancien système) | Phases 4 à 6 (7 en pause) |
-| 9. *(hors périmètre initial)* Partage réseaux sociaux | Réactivation du partage automatique Facebook/Twitter (§3.8), en phase **ultérieure au lancement** de la refonte | Uniquement l'interface d'extension `Social/` posée en phase 1-2 ; l'intégration effective est traitée plus tard | Phase 8 (post-lancement) |
+| 9. *(partielle, avancée)* Partage réseaux sociaux | Partage automatique **Facebook** (§3.8) implémenté par anticipation, avant le lancement ; **Twitter** reste différé en phase ultérieure | `App\Social\FacebookPublisher` (API Graph) + `app:articles:share` ; interface d'extension `Social/` posée en phase 1-2 pour Twitter | Facebook : réalisé ; Twitter : Phase 8 (post-lancement) |
 
 **Deux décisions du porteur produit, en cours de refonte (postérieures aux réponses de §12.1)** :
 
@@ -817,7 +818,7 @@ intégrées dans le corps du document (renvois ci-dessous) :
 | # | Question | Réponse | Intégrée en |
 |---|---|---|---|
 | 1 | Fonctionnalité "actualité par pays" : terminer ou retirer ? | **À reprendre**, avec croisement par mot-clé et consultation d'archives | §3.13 |
-| 2 | Partage automatique Facebook/Twitter actif ou manuel ? | **Implémentation différée**, phase ultérieure | §3.8, §11.2 phase 9 |
+| 2 | Partage automatique Facebook/Twitter actif ou manuel ? | **Facebook implémenté** (automatique, par anticipation) ; **Twitter reste différé**, phase ultérieure | §3.8, §11.2 phase 9 |
 | 3 | Newsletter quotidienne : brouillon ou à généraliser ? | **Abandonnée** pour l'instant | §3.7, §14 |
 | 4 | Configuration crontab réelle ? | Extraction et classification **tournent en continu** | §6 |
 | 5 | Volumétrie actuelle ? | ~30 flux RSS ; ajout prévu de flux anglophones ; pas d'inscription requise ; ~40 destinataires newsletter | §3bis, §7, §3.7 |
@@ -878,7 +879,7 @@ intégrées dans le corps du document (renvois ci-dessous) :
 |---|---|---|
 | `app:articles:extract` | `ArticlesCommand` | À reprendre — traitement continu, cible : worker Messenger (§6) |
 | `app:articles:classify` | `ClassifyArticlesCommand` | À reprendre — traitement continu, remplacé par le pipeline bilingue (§10) |
-| `app:articles:share` | `ShareCommand` | Différée — partage réseaux sociaux implémenté ultérieurement (§3.8) |
+| `app:articles:share` | `ShareCommand` | Reprise (volet Facebook uniquement, cf. `App\Social\FacebookPublisher`) — volet Twitter différé (§3.8) |
 | `app:articles:daily` | `DailyNewsCommand` | **Abandonnée** — newsletter quotidienne retirée du périmètre (§3.7) |
 | `app:country:fill` | `CountryCommand` | À reprendre — alimente aussi le croisement pays × mot-clé (§3.13) |
 

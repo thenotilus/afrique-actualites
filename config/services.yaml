@@ -70,6 +70,10 @@ services:
             $crawlerCache: '@cache.crawler'
             $cacheTtlSeconds: '%crawler.cache_ttl%'
 
+    App\Crawler\Message\CrawlArticleMetaMessageHandler:
+        arguments:
+            $batchSize: '%crawler.meta_batch_size%'
+
     # Récupération des articles (§6) : lecture des flux RSS/Atom actifs et création des articles.
     App\Feed\FeedIngester:
         arguments:
@@ -106,3 +110,25 @@ services:
     App\Synthesis\SynthesisGenerator:
         arguments:
             $autoPublish: '%synthesis.auto_publish%'
+
+  # Backfill historique (§6bis) : découverte de sitemaps et récupération des articles des N
+  # dernières années sur les médias enregistrés, au-delà de ce que le flux RSS/Atom expose.
+    App\Feed\SitemapLocator:
+      arguments:
+        $userAgent: '%feed.user_agent%'
+        $requestTimeout: '%feed.request_timeout%'
+
+    App\Feed\FeedBackfiller:
+      arguments:
+        $userAgent: '%feed.user_agent%'
+        $requestTimeout: '%feed.request_timeout%'
+        $maxSitemapsPerFeed: '%feed.backfill_max_sitemaps%'
+
+  # Partage sur les réseaux sociaux (§3.8) : publication des articles sur la Page Facebook du
+  # média via l'API Graph.
+    App\Social\FacebookPublisher:
+      arguments:
+        $pageId: '%social.facebook_page_id%'
+        $pageAccessToken: '%social.facebook_page_access_token%'
+        $graphApiVersion: '%social.facebook_graph_api_version%'
+        $requestTimeout: '%social.facebook_request_timeout%'

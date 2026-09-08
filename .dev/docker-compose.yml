@@ -121,6 +121,11 @@ services:
   # et du .env.local monté (DATABASE_URL, etc.), sans paquet supplémentaire.
   # L'ingestion met en file les crawls de repli que le service `messenger` consomme ensuite.
   # `restart: unless-stopped` relance la boucle si elle s'interrompt.
+  #
+  # Backfill historique (§6bis, `app:feed:backfill`) : boucle séparée en arrière-plan, lancée une
+  # fois au démarrage puis toutes les 7 jours — même cadence hebdomadaire que le cron de prod
+  # (crontab), plutôt que toutes les 5 minutes comme l'ingestion (coûteux : parcourt les sitemaps
+  # de tous les médias enregistrés).
   scheduler:
     build:
       context: ./php
@@ -133,7 +138,7 @@ services:
     depends_on:
       database:
         condition: service_healthy
-    command: ["sh", "-c", "while true; do php bin/console app:feed:ingest --no-interaction; php bin/console app:classification:run --no-interaction; sleep 300; done"]
+    command: ["sh", "-c", "(while true; do php bin/console app:feed:backfill --no-interaction; sleep 604800; done) & while true; do php bin/console app:feed:ingest --no-interaction; php bin/console app:classification:run --no-interaction; sleep 300; done"]
     networks:
       - afrique_net
 

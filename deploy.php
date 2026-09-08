@@ -53,7 +53,7 @@ set('default_timeout', 900);
 // ─── Fichiers / dossiers partagés entre releases ────────────────────────────
 // (`.env.local` et `var/log` sont déjà déclarés par la recette symfony.php ;
 //  on complète avec le dossier des sessions.)
-add('shared_dirs', ['var/sessions', 'var/log', 'var/cache']);
+add('shared_dirs', ['var/sessions', 'var/log']);
 add('writable_dirs', ['var/sessions', 'var/log', 'var/cache']);
 
 // ─── Installation des dépendances (production) ──────────────────────────────

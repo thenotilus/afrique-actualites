@@ -64,6 +64,7 @@ class ArticleCrudController extends AbstractCrudController
         yield DateTimeField::new('publicationDate', 'Date de publication');
         yield BooleanField::new('publish', 'Publié')->renderAsSwitch();
         yield BooleanField::new('shared', 'Partagé')->hideOnForm();
+        yield DateTimeField::new('sharedAt', 'Partagé le')->hideOnForm()->hideOnIndex();
         yield AssociationField::new('keywords', 'Mots-clés validés')
             ->onlyOnIndex()
             ->formatValue(static fn ($value) => implode(', ', array_map(

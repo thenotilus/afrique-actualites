@@ -22,7 +22,7 @@ src/
   Geography/       Pays, croisement pays × mot-clé, archives (voir §3.13)
   News/            "Unes" thématiques utilisateur
   Newsletter/       Newsletter hebdomadaire et gestion des abonnés
-  Social/          Partage réseaux sociaux — interfaces posées, implémentation différée (§3.8)
+  Social/          Partage réseaux sociaux — Facebook implémenté (API Graph), Twitter différé (§3.8)
   User/            Compte utilisateur, sécurité
   Shared/          Code transverse : Utils/, ValueObject/, Dto/, Pagination/, Twig/
   Sitemap/         Index de sitemaps racine (hors préfixe /{_locale}, voir plus bas)

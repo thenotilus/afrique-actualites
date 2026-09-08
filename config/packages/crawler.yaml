@@ -17,3 +17,10 @@ parameters:
 
     # Durée de mise en cache (secondes) d'un résultat de crawl réussi, par URL (§9.4).
     crawler.cache_ttl: 86400
+
+    # Nombre de messages `CrawlArticleMetaMessage` accumulés par le worker avant de retrouver les
+    # articles concernés (une requête pour tout le lot) et de flusher leurs mises à jour ensemble
+    # (cf. docblock de `CrawlArticleMetaMessageHandler`). Le worker flushe de toute façon plus tôt
+    # dès qu'il n'y a momentanément plus de message à consommer, ou qu'il s'arrête : ce plafond ne
+    # fait donc que borner la taille d'un lot plein, pas retarder indéfiniment un message isolé.
+    crawler.meta_batch_size: 20

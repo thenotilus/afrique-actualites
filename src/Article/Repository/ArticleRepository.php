@@ -74,6 +74,43 @@ class ArticleRepository extends ServiceEntityRepository
     }
 
     /**
+     * Articles d'un flux dont le texte (titre et description) est exploitable pour la
+     * classification, publiés depuis `$since`, du plus ancien au plus récent. Sert au backfill
+     * historique (§6bis) : {@see \App\Feed\FeedBackfiller} regroupe ce résultat par jour plutôt que
+     * de tout classer en un seul lot, pour ne pas mélanger dans les mêmes statistiques de fréquence
+     * documentaire des articles d'époques différentes. N'exige pas une image (celle-ci
+     * n'entre pas dans l'extraction de tokens, cf. `ClassificationService::extractTokenWeights()`)
+     * : un article encore sans image mais déjà titré/décrit reste classable.
+     *
+     * `SIZE(a.taxonomies) = 0` exclut tout article déjà passé par une classification, qu'elle
+     * vienne d'ici ou de la fenêtre glissante temps réel (`app:classification:run`) : sans ce
+     * filtre, chaque exécution hebdomadaire du backfill (§6bis) reclasserait indéfiniment
+     * l'intégralité de l'historique du média à chaque passage — coûteux, inutile (idempotent mais
+     * pas gratuit), et la cause d'un épuisement mémoire observé en production sur un média à
+     * plusieurs années d'articles déjà classés. `$limit` borne en outre le volume d'un seul passage
+     * (le reliquat, s'il y en a un, est repris automatiquement au run suivant).
+     *
+     * @return list<Article>
+     */
+    public function findClassifiableByFeedSince(Feed $feed, \DateTimeImmutable $since, ?int $limit = null): array
+    {
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->andWhere('a.feed = :feed')
+            ->andWhere("a.title != '' AND a.description != ''")
+            ->andWhere('a.publicationDate >= :since')
+            ->andWhere('SIZE(a.taxonomies) = 0')
+            ->setParameter('feed', $feed)
+            ->setParameter('since', $since)
+            ->orderBy('a.publicationDate', 'ASC');
+
+        if (null !== $limit) {
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
      * Articles *ingérés* depuis l'instant donné (fenêtre glissante de classification, §6), du plus
      * récemment ingéré au plus ancien. On borne sur `createdAt` (date d'ingestion) et non sur
      * `publicationDate` : ainsi tout article reste dans la fenêtre le temps voulu après sa création,
@@ -290,6 +327,44 @@ class ArticleRepository extends ServiceEntityRepository
             ->leftJoin('a.keywords', 'k')
             ->andWhere('LOWER(a.title) LIKE :needle OR LOWER(a.description) LIKE :needle OR LOWER(k.label) LIKE :needle')
             ->setParameter('needle', '%'.mb_strtolower($query).'%');
+    }
+
+    /**
+     * Sélectionne le prochain article à partager sur les réseaux sociaux (§3.8, `app:articles:share`) :
+     * le plus récent article publié non encore partagé, en excluant ceux dont *aucun* mot-clé
+     * n'échappe aux mots-clés déjà partagés dans la fenêtre anti-répétition (`$repeatKeywordsSince`)
+     * — reproduit la logique de l'ancienne application (`ArticleService::getArticleToShare`), qui
+     * évitait de publier coup sur coup plusieurs articles du même sujet. Un article sans mot-clé
+     * n'est jamais concerné par cette exclusion (rien à répéter). `null` si tous les articles
+     * publiables ont déjà été partagés, ou ne portent que des mots-clés en cooldown.
+     */
+    public function findNextToShare(\DateTimeImmutable $repeatKeywordsSince): ?Article
+    {
+        $recentlySharedKeywordIds = array_map(
+            static fn (array $row): int => (int) $row['id'],
+            $this->createQueryBuilder('a')
+                ->select('DISTINCT k.id')
+                ->join('a.keywords', 'k')
+                ->andWhere('a.shared = true')
+                ->andWhere('a.sharedAt >= :since')
+                ->setParameter('since', $repeatKeywordsSince)
+                ->getQuery()
+                ->getScalarResult(),
+        );
+
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->andWhere('a.publish = true')
+            ->andWhere('a.shared = false')
+            ->orderBy('a.publicationDate', 'DESC')
+            ->setMaxResults(1);
+
+        if ([] !== $recentlySharedKeywordIds) {
+            $queryBuilder
+                ->andWhere('NOT EXISTS (SELECT k2 FROM App\Taxonomy\Entity\Taxonomy k2 WHERE k2 MEMBER OF a.keywords AND k2.id IN (:recentlySharedKeywordIds))')
+                ->setParameter('recentlySharedKeywordIds', $recentlySharedKeywordIds);
+        }
+
+        return $queryBuilder->getQuery()->getOneOrNullResult();
     }
 
     /**
