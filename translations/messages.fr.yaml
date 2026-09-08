@@ -8,6 +8,7 @@ app:
 nav:
     home: "Accueil"
     countries: "Pays"
+    syntheses: "Synthèses"
     user_news: "Unes"
     search: "Recherche"
     my_user_news: "Mes Unes"
@@ -74,6 +75,12 @@ country_show:
     archives: "Archives"
     all_archives: "Toutes les archives"
     syntheses_title: "Synthèses hebdomadaires"
+
+synthesis_index:
+    title: "Synthèses hebdomadaires"
+    eyebrow: "Synthèses"
+    count: "%count% synthèse(s)"
+    empty: "Aucune synthèse publiée pour le moment."
 
 synthesis_show:
     breadcrumb_current: "Synthèse hebdomadaire"

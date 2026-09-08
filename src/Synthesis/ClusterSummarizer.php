@@ -41,7 +41,7 @@ final class ClusterSummarizer
             $this->buildUserPrompt($theme, $articles, $language),
             $this->model,
             0.3,
-            500,
+            1000,
         ));
 
         $this->logger->info('Synthèse : cluster résumé.', ['theme' => $theme->value, 'length' => mb_strlen($paragraph)]);

@@ -8,6 +8,7 @@ app:
 nav:
     home: "Home"
     countries: "Countries"
+    syntheses: "Summaries"
     user_news: "News lists"
     search: "Search"
     my_user_news: "My news lists"
@@ -74,6 +75,12 @@ country_show:
     archives: "Archives"
     all_archives: "All archives"
     syntheses_title: "Weekly summaries"
+
+synthesis_index:
+    title: "Weekly summaries"
+    eyebrow: "Summaries"
+    count: "%count% summary(ies)"
+    empty: "No published summary yet."
 
 synthesis_show:
     breadcrumb_current: "Weekly summary"

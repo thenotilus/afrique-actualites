@@ -58,7 +58,7 @@ class Synthesis
     #[ORM\Column(length: 255)]
     private string $title;
 
-    #[ORM\Column(type: 'text')]
+    #[ORM\Column(name: '`lead`', type: 'text')]
     private string $lead;
 
     /** Corps structuré en sections par sous-thème, assemblé en HTML par `SynthesisAssembler` à partir de texte déjà échappé — jamais de HTML brut renvoyé par le LLM (§ "Assemblage final"). */
@@ -199,6 +199,21 @@ class Synthesis
         }
 
         return $this;
+    }
+
+    /**
+     * Image d'illustration : celle du premier article source qui en a une, faute de visuel propre
+     * à la synthèse (contenu généré, jamais de génération/choix d'image dans le pipeline).
+     */
+    public function getIllustrationImage(): ?string
+    {
+        foreach ($this->sourceArticles as $article) {
+            if (null !== $article->getImage() && '' !== $article->getImage()) {
+                return $article->getImage();
+            }
+        }
+
+        return null;
     }
 
     public function getStatus(): SynthesisStatus

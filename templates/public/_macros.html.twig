@@ -42,6 +42,27 @@
     </article>
 {% endmacro %}
 
+{# Carte de synthèse hebdomadaire : pas de visuel, éditorial seul (titre, chapô, portée/semaine). #}
+{% macro synthesis_card(synthesis) %}
+    <article class="article-card synthesis-card">
+        {% if synthesis.illustrationImage %}
+            <a class="thumb" href="{{ path('app_synthesis_show', {scope: synthesis.urlScope, semaine: synthesis.weekStart|date('Y-m-d')}) }}" aria-hidden="true" tabindex="-1">
+                <img src="{{ synthesis.illustrationImage }}" alt="" loading="lazy">
+            </a>
+        {% endif %}
+        <div class="article-card__body">
+            <div class="article-card__meta">
+                <span class="source">{{ synthesis.scopeLabel }}</span> ·
+                {{ 'synthesis_show.week'|trans({'%start%': synthesis.weekStart|date('d/m/Y'), '%end%': synthesis.weekEnd|date('d/m/Y')}) }}
+            </div>
+            <h3 class="article-card__title">
+                <a href="{{ path('app_synthesis_show', {scope: synthesis.urlScope, semaine: synthesis.weekStart|date('Y-m-d')}) }}">{{ synthesis.title }}</a>
+            </h3>
+            {% if synthesis.lead %}<p class="synthesis-card__lead">{{ synthesis.lead }}</p>{% endif %}
+        </div>
+    </article>
+{% endmacro %}
+
 {# Ligne horizontale : petit visuel à gauche, titre + méta à droite. #}
 {% macro article_row(article, active) %}
     {% import _self as m %}

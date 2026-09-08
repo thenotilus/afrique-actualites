@@ -251,6 +251,10 @@
         .article-card__title { font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.28; }
         .article-card__title a { color: var(--ink); }
         .article-card__title a:hover { color: var(--ocre); }
+        .synthesis-card__lead {
+            font-size: 14px; line-height: 1.5; color: var(--muted);
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
 
         /* Horizontal row list */
         .article-rows { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -743,6 +747,7 @@
                 <nav class="site-nav">
                     <a href="{{ path('app_home') }}" class="{{ current_route == 'app_home' ? 'active' }}">{{ 'nav.home'|trans }}</a>
                     <a href="{{ path('app_country_index') }}" class="{{ current_route starts with 'app_country' ? 'active' }}">{{ 'nav.countries'|trans }}</a>
+                    <a href="{{ path('app_synthesis_index') }}" class="{{ current_route starts with 'app_synthesis' ? 'active' }}">{{ 'nav.syntheses'|trans }}</a>
                     <a href="{{ path('app_user_news_index') }}" class="{{ current_route starts with 'app_user_news' or current_route starts with 'app_my_user_news' ? 'active' }}">{{ 'nav.user_news'|trans }}</a>
                 </nav>
             </div>
@@ -804,6 +809,7 @@
         <nav class="mobile-drawer__nav">
             <a href="{{ path('app_home') }}" class="{{ current_route == 'app_home' ? 'active' }}">{{ 'nav.home'|trans }}</a>
             <a href="{{ path('app_country_index') }}" class="{{ current_route starts with 'app_country' ? 'active' }}">{{ 'nav.countries'|trans }}</a>
+            <a href="{{ path('app_synthesis_index') }}" class="{{ current_route starts with 'app_synthesis' ? 'active' }}">{{ 'nav.syntheses'|trans }}</a>
             <a href="{{ path('app_user_news_index') }}" class="{{ current_route starts with 'app_user_news' or current_route starts with 'app_my_user_news' ? 'active' }}">{{ 'nav.user_news'|trans }}</a>
         </nav>
         <div class="mobile-drawer__section">
@@ -844,6 +850,7 @@
             <span>{{ 'app.site_name'|trans }} — {{ 'footer.tagline'|trans }}</span>
             <span class="site-footer__links">
                 <a href="{{ path('app_country_index') }}">{{ 'nav.countries'|trans }}</a>
+                <a href="{{ path('app_synthesis_index') }}">{{ 'nav.syntheses'|trans }}</a>
                 <a href="{{ path('app_user_news_index') }}">{{ 'nav.user_news'|trans }}</a>
                 <a href="{{ path('app_search') }}">{{ 'nav.search'|trans }}</a>
             </span>

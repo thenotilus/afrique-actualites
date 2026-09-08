@@ -8,6 +8,7 @@ use App\Shared\ValueObject\Language;
 use App\Synthesis\Entity\Synthesis;
 use App\Synthesis\Enum\SynthesisStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -121,6 +122,21 @@ class SynthesisRepository extends ServiceEntityRepository
             ->setParameter('status', SynthesisStatus::PUBLISHED)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * Toutes les synthèses publiées, les plus récentes d'abord — alimente l'annuaire public
+     * `app_synthesis_index` (page paginée listant l'ensemble des synthèses hebdomadaires).
+     */
+    public function publishedQueryBuilder(Language $language): QueryBuilder
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.language = :language')
+            ->andWhere('s.status = :status')
+            ->setParameter('language', $language)
+            ->setParameter('status', SynthesisStatus::PUBLISHED)
+            ->orderBy('s.weekStart', 'DESC')
+            ->addOrderBy('s.id', 'DESC');
     }
 
     /** Synthèse publiée d'une région pour une semaine donnée (route publique `app_synthesis_show`). */

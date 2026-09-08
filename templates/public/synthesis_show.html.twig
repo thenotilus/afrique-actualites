@@ -24,6 +24,10 @@
             <span>{{ 'synthesis_show.week'|trans({'%start%': synthesis.weekStart|date('d/m/Y'), '%end%': synthesis.weekEnd|date('d/m/Y')}) }}</span>
         </div>
 
+        {% if synthesis.illustrationImage %}
+            <div class="article-detail__media"><img src="{{ synthesis.illustrationImage }}" alt=""></div>
+        {% endif %}
+
         {% if synthesis.lead %}
             <div class="prose"><p class="lead">{{ synthesis.lead }}</p></div>
         {% endif %}

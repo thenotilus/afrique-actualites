@@ -1,0 +1,12 @@
+parameters:
+    # Identifiant et jeton d'accès (longue durée, généré côté Meta for Developers) de la Page
+    # Facebook du média (§3.8). Jamais de valeur en dur ici : à définir dans `.env.local`
+    # (non versionné) ou via un secret Symfony en production — voir le garde-fou en tête de `.env`.
+    social.facebook_page_id: '%env(FACEBOOK_PAGE_ID)%'
+    social.facebook_page_access_token: '%env(FACEBOOK_PAGE_ACCESS_TOKEN)%'
+
+    # Version de l'API Graph ciblée (https://developers.facebook.com/docs/graph-api/changelog).
+    social.facebook_graph_api_version: 'v21.0'
+
+    # Délai d'attente (secondes) de la requête HTTP de publication.
+    social.facebook_request_timeout: 10.0

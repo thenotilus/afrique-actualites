@@ -1,0 +1,41 @@
+{% extends 'public/base.html.twig' %}
+
+{% import 'public/_macros.html.twig' as m %}
+
+{% block title %}{{ 'synthesis_index.title'|trans }} — {{ 'app.site_name'|trans }}{% endblock %}
+
+{% block mobile_title %}{{ 'synthesis_index.title'|trans }}{% endblock %}
+
+{% block public_body %}
+    <div class="page-hero">
+        <div>
+            <div class="page-hero__eyebrow">{{ 'synthesis_index.eyebrow'|trans }}</div>
+            <h1 class="page-hero__title">{{ 'synthesis_index.title'|trans }}</h1>
+            <div class="page-hero__meta">{{ 'synthesis_index.count'|trans({'%count%': pagination.totalItems}) }}</div>
+        </div>
+    </div>
+
+    {% if pagination.items|length == 0 %}
+        <p class="empty-state">{{ 'synthesis_index.empty'|trans }}</p>
+    {% else %}
+        <div class="card-grid cols-3">
+            {% for synthesis in pagination.items %}
+                {{ m.synthesis_card(synthesis) }}
+            {% endfor %}
+        </div>
+
+        <nav class="pagination">
+            {% if pagination.hasPreviousPage %}
+                <a href="{{ path('app_synthesis_index', {page: pagination.page - 1}) }}">&larr; {{ 'pagination.previous'|trans }}</a>
+            {% else %}
+                <span class="disabled">&larr; {{ 'pagination.previous'|trans }}</span>
+            {% endif %}
+            <span>{{ 'pagination.page_of'|trans({'%page%': pagination.page, '%total%': pagination.getTotalPages}) }}</span>
+            {% if pagination.hasNextPage %}
+                <a href="{{ path('app_synthesis_index', {page: pagination.page + 1}) }}">{{ 'pagination.next'|trans }} &rarr;</a>
+            {% else %}
+                <span class="disabled">{{ 'pagination.next'|trans }} &rarr;</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}
