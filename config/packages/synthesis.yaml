@@ -4,10 +4,10 @@ parameters:
     # `Country::$region` (voir `App\Synthesis\WeeklySelector`).
     synthesis.min_articles_per_country: 5
 
-    # Flag de bascule vers la publication 100% automatique (§ "Workflow de validation") : tant
-    # qu'il reste à `false` (défaut), chaque synthèse générée par `app:synthesis:generate` reste au
-    # statut brouillon en attente de relecture dans le back-office. À activer une fois le pipeline
-    # fiabilisé sur plusieurs semaines, sans toucher au code.
+    # Flag de publication automatique (§ "Workflow de validation") : activé par défaut, chaque
+    # synthèse générée par `app:synthesis:generate` est publiée immédiatement. Repasser à `false`
+    # (env `AUTO_PUBLISH`) pour revenir au circuit de relecture manuelle dans le back-office, sans
+    # toucher au code.
     synthesis.auto_publish: '%env(bool:AUTO_PUBLISH)%'
 
     # API OVHcloud AI Endpoints (fournisseur LLM retenu, voir `OvhCloudAiEndpointsClient`) :

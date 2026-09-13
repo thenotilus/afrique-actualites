@@ -18,10 +18,9 @@ use Psr\Log\LoggerInterface;
  * cluster → assemblage), appelé par `app:synthesis:generate` (§ "Scheduling"). Logue chaque étape
  * (§ "Script/job de génération... avec logs clairs à chaque étape").
  *
- * Une synthèse est toujours créée au statut DRAFT, sauf si `$autoPublish` (paramètre
- * `synthesis.auto_publish`, env `AUTO_PUBLISH`) est activé — flag de configuration prévu par la
- * spec pour basculer plus tard vers une publication 100% automatique sans réécrire le pipeline
- * (§ "Workflow de validation").
+ * Une synthèse est publiée dès sa génération si `$autoPublish` (paramètre `synthesis.auto_publish`,
+ * env `AUTO_PUBLISH`, activé par défaut) est actif ; sinon elle reste au statut DRAFT en attente de
+ * relecture dans le back-office (§ "Workflow de validation").
  *
  * Un échec LLM sur un pays/une région n'interrompt jamais le run entier : il est journalisé et
  * compté comme échec dans le bilan, les autres pays/régions de la semaine continuent d'être

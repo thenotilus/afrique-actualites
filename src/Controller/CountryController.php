@@ -78,7 +78,9 @@ class CountryController extends AbstractController
             'archiveYears' => $archiveYears,
             'activeMonth' => $activeMonth,
             'showArchives' => 'archives' === $request->query->get('view') || null !== $activeMonth,
-            'syntheses' => $synthesisRepository->findPublishedForCountry($country, $language),
+            // Limite large (au-delà des quelques cartes affichées) pour que le sélecteur de
+            // semaine couvre tout l'historique publié du pays, pas seulement les cartes visibles.
+            'syntheses' => $synthesisRepository->findPublishedForCountry($country, $language, 52),
         ]);
     }
 

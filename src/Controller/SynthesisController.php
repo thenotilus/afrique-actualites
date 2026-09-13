@@ -62,6 +62,14 @@ class SynthesisController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        return $this->render('public/synthesis_show.html.twig', ['synthesis' => $synthesis]);
+        $weekOptions = null !== $synthesis->getCountry()
+            ? $this->synthesisRepository->findPublishedForCountry($synthesis->getCountry(), $language, 52)
+            : $this->synthesisRepository->findPublishedForRegion($synthesis->getRegion(), $language, 52);
+
+        return $this->render('public/synthesis_show.html.twig', [
+            'synthesis' => $synthesis,
+            'weekOptions' => $weekOptions,
+            'scopeOptions' => $this->synthesisRepository->findLatestPerScope($language),
+        ]);
     }
 }

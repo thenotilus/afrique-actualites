@@ -154,4 +154,53 @@ class SynthesisRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Synthèses publiées les plus récentes, toutes zones (pays/région) confondues — alimente le
+     * carrousel « La semaine dernière » de la page d'accueil (`ArticleController::home`).
+     *
+     * @return list<Synthesis>
+     */
+    public function findLatestPublished(Language $language, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('s')
+            ->andWhere('s.language = :language')
+            ->andWhere('s.status = :status')
+            ->setParameter('language', $language)
+            ->setParameter('status', SynthesisStatus::PUBLISHED)
+            ->orderBy('s.weekStart', 'DESC')
+            ->addOrderBy('s.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * La synthèse la plus récente pour chaque zone (pays ou région) publiée — alimente le
+     * sélecteur « pays » de la page de détail (`app_synthesis_show`), chaque option pointant vers
+     * la dernière semaine disponible pour cette zone.
+     *
+     * @return list<Synthesis>
+     */
+    public function findLatestPerScope(Language $language): array
+    {
+        $syntheses = $this->createQueryBuilder('s')
+            ->andWhere('s.language = :language')
+            ->andWhere('s.status = :status')
+            ->setParameter('language', $language)
+            ->setParameter('status', SynthesisStatus::PUBLISHED)
+            ->orderBy('s.weekStart', 'DESC')
+            ->addOrderBy('s.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $latestByScope = [];
+        foreach ($syntheses as $synthesis) {
+            $latestByScope[$synthesis->getUrlScope()] ??= $synthesis;
+        }
+
+        usort($latestByScope, static fn (Synthesis $a, Synthesis $b) => $a->getScopeLabel() <=> $b->getScopeLabel());
+
+        return array_values($latestByScope);
+    }
 }

@@ -54,6 +54,8 @@ article_show:
 
 home:
     latest_articles: "Derniers articles"
+    last_week_syntheses: "La semaine dernière"
+    see_all_syntheses: "Voir toutes les synthèses"
 
 article_list_by_keyword:
     eyebrow: "Mot-clé"
@@ -75,6 +77,7 @@ country_show:
     archives: "Archives"
     all_archives: "Toutes les archives"
     syntheses_title: "Synthèses hebdomadaires"
+    select_week: "Choisir une semaine"
 
 synthesis_index:
     title: "Synthèses hebdomadaires"
@@ -87,6 +90,8 @@ synthesis_show:
     eyebrow: "Synthèse hebdomadaire"
     week: "Semaine du %start% au %end%"
     sources: "Articles sources"
+    select_scope: "Choisir un pays"
+    select_week: "Choisir une semaine"
 
 search:
     title: "Recherche"

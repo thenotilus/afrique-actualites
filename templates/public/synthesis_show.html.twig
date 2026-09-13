@@ -24,6 +24,27 @@
             <span>{{ 'synthesis_show.week'|trans({'%start%': synthesis.weekStart|date('d/m/Y'), '%end%': synthesis.weekEnd|date('d/m/Y')}) }}</span>
         </div>
 
+        <div class="selector-bar">
+            {% if scopeOptions|default([])|length > 1 %}
+                <select class="select-week" data-navigate-select aria-label="{{ 'synthesis_show.select_scope'|trans }}">
+                    {% for option in scopeOptions %}
+                        <option value="{{ path('app_synthesis_show', {scope: option.urlScope, semaine: option.weekStart|date('Y-m-d')}) }}" {{ option.urlScope == synthesis.urlScope ? 'selected' }}>
+                            {{ option.scopeLabel }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            {% if weekOptions|default([])|length > 1 %}
+                <select class="select-week" data-navigate-select aria-label="{{ 'synthesis_show.select_week'|trans }}">
+                    {% for option in weekOptions %}
+                        <option value="{{ path('app_synthesis_show', {scope: option.urlScope, semaine: option.weekStart|date('Y-m-d')}) }}" {{ option.weekStart == synthesis.weekStart ? 'selected' }}>
+                            {{ 'synthesis_show.week'|trans({'%start%': option.weekStart|date('d/m/Y'), '%end%': option.weekEnd|date('d/m/Y')}) }}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+        </div>
+
         {% if synthesis.illustrationImage %}
             <div class="article-detail__media"><img src="{{ synthesis.illustrationImage }}" alt=""></div>
         {% endif %}

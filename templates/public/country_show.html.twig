@@ -1,5 +1,7 @@
 {% extends 'public/base.html.twig' %}
 
+{% import 'public/_macros.html.twig' as m %}
+
 {% set countryName = app.request.locale == 'en' ? country.nameEn : country.nameFr %}
 
 {% block title %}{{ countryName }} — {{ 'app.site_name'|trans }}{% endblock %}
@@ -31,10 +33,20 @@
         <div class="section">
             <div class="section-head">
                 <span class="section-title">{{ 'country_show.syntheses_title'|trans }}</span>
+                {% if syntheses|length > 1 %}
+                    <select class="select-week" data-navigate-select aria-label="{{ 'country_show.select_week'|trans }}">
+                        <option value="">{{ 'country_show.select_week'|trans }}</option>
+                        {% for synthesis in syntheses %}
+                            <option value="{{ path('app_synthesis_show', {scope: synthesis.urlScope, semaine: synthesis.weekStart|date('Y-m-d')}) }}">
+                                {{ 'synthesis_show.week'|trans({'%start%': synthesis.weekStart|date('d/m/Y'), '%end%': synthesis.weekEnd|date('d/m/Y')}) }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
             </div>
-            <div class="tags">
-                {% for synthesis in syntheses %}
-                    <a class="tag tag--outline" href="{{ path('app_synthesis_show', {scope: synthesis.urlScope, semaine: synthesis.weekStart|date('Y-m-d')}) }}">{{ synthesis.title }}</a>
+            <div class="card-grid cols-3">
+                {% for synthesis in syntheses|slice(0, 6) %}
+                    {{ m.synthesis_card(synthesis) }}
                 {% endfor %}
             </div>
         </div>

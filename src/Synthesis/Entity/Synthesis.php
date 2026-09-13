@@ -26,10 +26,10 @@ use Doctrine\ORM\Mapping as ORM;
  * pipeline (traçabilité et attribution, § "Nouvelle table syntheses") : ce n'est pas une relation
  * éditoriale comme `WeeklyNewsletter::$articles`, on n'y ajoute jamais d'article a posteriori.
  *
- * Toujours créée au statut DRAFT par `SynthesisGenerator`, sauf si le flag `synthesis.auto_publish`
- * est activé (§ "Scheduling" / "Workflow de validation") : le circuit de validation humaine
- * (`publish()`/`reject()`) reste la voie par défaut tant que le pipeline n'a pas fait ses preuves
- * sur plusieurs semaines.
+ * Créée au statut DRAFT par `SynthesisGenerator`, sauf si le flag `synthesis.auto_publish` (activé
+ * par défaut, env `AUTO_PUBLISH`) est actif, auquel cas elle est publiée dès sa génération par
+ * `app:synthesis:generate` (§ "Scheduling" / "Workflow de validation") — le circuit de validation
+ * humaine (`publish()`/`reject()`) reste disponible en repassant le flag à `false`.
  */
 #[ORM\Entity(repositoryClass: SynthesisRepository::class)]
 #[ORM\Table(name: 'sf_synthesis')]

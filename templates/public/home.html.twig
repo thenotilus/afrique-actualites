@@ -21,6 +21,24 @@
         </article>
     {% endif %}
 
+    {% if latestSyntheses|default([])|length > 0 %}
+        <section class="section">
+            <div class="section-head">
+                <span class="section-title">{{ 'home.last_week_syntheses'|trans }}</span>
+                <a class="see-all" href="{{ path('app_synthesis_index') }}">{{ 'home.see_all_syntheses'|trans }} →</a>
+            </div>
+            <div class="carousel" data-carousel>
+                <button type="button" class="carousel__nav carousel__nav--prev" data-carousel-prev aria-label="{{ 'pagination.previous'|trans }}">‹</button>
+                <div class="carousel__track" data-carousel-track>
+                    {% for synthesis in latestSyntheses %}
+                        <div class="carousel__item">{{ m.synthesis_card(synthesis) }}</div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="carousel__nav carousel__nav--next" data-carousel-next aria-label="{{ 'pagination.next'|trans }}">›</button>
+            </div>
+        </section>
+    {% endif %}
+
     <section class="section">
         <div class="section-head">
             <span class="section-title">{{ 'home.latest_articles'|trans }}</span>

@@ -6,6 +6,7 @@ use App\Article\Repository\ArticleRepository;
 use App\Feed\Repository\FeedRepository;
 use App\Shared\Pagination\QueryPaginator;
 use App\Shared\ValueObject\Language;
+use App\Synthesis\Repository\SynthesisRepository;
 use App\Taxonomy\Repository\TaxonomyRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,7 +30,7 @@ class ArticleController extends AbstractController
     }
 
     #[Route('/', name: 'app_home')]
-    public function home(Request $request): Response
+    public function home(Request $request, SynthesisRepository $synthesisRepository): Response
     {
         $language = Language::from($request->getLocale());
         $queryBuilder = $this->articleRepository->publishedQueryBuilder($language);
@@ -38,6 +39,7 @@ class ArticleController extends AbstractController
         return $this->render('public/home.html.twig', [
             'featuredArticle' => $this->articleRepository->findLatestSponsored($language),
             'pagination' => $this->paginator->paginate($queryBuilder, $page, self::HOME_ARTICLES_PER_PAGE),
+            'latestSyntheses' => $synthesisRepository->findLatestPublished($language),
         ]);
     }
 
